@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - {{ app_name }}{% endblock %}
+
+{% block page_title %}Welcome, {{ current_user.name }}!{% endblock %}
+{% block page_description %}{{ current_user.get_role_display() }} Dashboard{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body text-center" style="padding: var(--spacing-xl);">
+        <h2 style="margin-bottom: var(--spacing-md);">Welcome to Cloud Bank Analytics</h2>
+        <p class="text-muted mb-2">Select a feature from the navigation menu to get started.</p>
+
+        <div class="kpi-grid" style="max-width: 800px; margin: var(--spacing-lg) auto 0;">
+            {% if current_user.role == 'FRAUD_ANALYST' %}
+            <a href="{{ url_for('fraud.dashboard') }}" class="card" style="text-decoration: none; cursor: pointer;">
+                <div class="card-body text-center">
+                    <div style="font-size: 3rem; margin-bottom: var(--spacing-sm);">🚨</div>
+                    <h3>Fraud Dashboard</h3>
+                    <p class="text-muted">Monitor suspicious activities</p>
+                </div>
+            </a>
+            <a href="{{ url_for('fraud.transactions') }}" class="card" style="text-decoration: none; cursor: pointer;">
+                <div class="card-body text-center">
+                    <div style="font-size: 3rem; margin-bottom: var(--spacing-sm);">📋</div>
+                    <h3>Transactions</h3>
+                    <p class="text-muted">Review all transactions</p>
+                </div>
+            </a>
+            {% elif current_user.role == 'FINANCIAL_MANAGER' %}
+            <a href="{{ url_for('financial.dashboard') }}" class="card" style="text-decoration: none; cursor: pointer;">
+                <div class="card-body text-center">
+                    <div style="font-size: 3rem; margin-bottom: var(--spacing-sm);">📈</div>
+                    <h3>Financial Analytics</h3>
+                    <p class="text-muted">View financial metrics</p>
+                </div>
+            </a>
+            <a href="{{ url_for('financial.reports') }}" class="card" style="text-decoration: none; cursor: pointer;">
+                <div class="card-body text-center">
+                    <div style="font-size: 3rem; margin-bottom: var(--spacing-sm);">📑</div>
+                    <h3>Custom Reports</h3>
+                    <p class="text-muted">Build custom reports</p>
+                </div>
+            </a>
+            {% elif current_user.role == 'COMPLIANCE_OFFICER' %}
+            <a href="{{ url_for('compliance.dashboard') }}" class="card"
+                style="text-decoration: none; cursor: pointer;">
+                <div class="card-body text-center">
+                    <div style="font-size: 3rem; margin-bottom: var(--spacing-sm);">✅</div>
+                    <h3>Compliance</h3>
+                    <p class="text-muted">Monitor compliance metrics</p>
+                </div>
+            </a>
+            <a href="{{ url_for('compliance.audit') }}" class="card" style="text-decoration: none; cursor: pointer;">
+                <div class="card-body text-center">
+                    <div style="font-size: 3rem; margin-bottom: var(--spacing-sm);">📜</div>
+                    <h3>Audit Log</h3>
+                    <p class="text-muted">Review system audit trail</p>
+                </div>
+            </a>
+            {% endif %}
+
+            <a href="{{ url_for('transactions.create') }}" class="card" style="text-decoration: none; cursor: pointer;">
+                <div class="card-body text-center">
+                    <div style="font-size: 3rem; margin-bottom: var(--spacing-sm);">💳</div>
+                    <h3>New Transaction</h3>
+                    <p class="text-muted">Create a transaction</p>
+                </div>
+            </a>
+            <a href="{{ url_for('transactions.history') }}" class="card"
+                style="text-decoration: none; cursor: pointer;">
+                <div class="card-body text-center">
+                    <div style="font-size: 3rem; margin-bottom: var(--spacing-sm);">📜</div>
+                    <h3>History</h3>
+                    <p class="text-muted">View transaction history</p>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Transactions - {{ app_name }}{% endblock %}
+
+{% block page_title %}Financial Transactions{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        💰 All Transactions
+    </div>
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if transactions %}
+                {% for txn in transactions %}
+                <tr>
+                    <td>{{ txn.transaction_id[:8] }}...</td>
+                    <td><span class="badge badge-primary">{{ txn.transaction_type }}</span></td>
+                    <td class="text-primary"><strong>${{ "{:,.2f}".format(txn.amount) }}</strong></td>
+                    <td>{{ txn.timestamp }}</td>
+                    <td><span class="badge badge-success">{{ txn.status }}</span></td>
+                    <td>
+                        <a href="{{ url_for('transactions.detail', transaction_id=txn.transaction_id) }}"
+                            class="btn btn-sm btn-outline">
+                            View
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted">No transactions found</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

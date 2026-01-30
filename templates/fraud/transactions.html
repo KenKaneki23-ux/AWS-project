@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Fraud Transactions - {{ app_name }}{% endblock %}
+
+{% block page_title %}Transaction Monitoring{% endblock %}
+{% block page_description %}Monitor and analyze suspicious transactions{% endblock %}
+
+{% block content %}
+<!-- Filters -->
+<div class="card mb-2">
+    <div class="card-body">
+        <form method="GET" class="d-flex gap-2 flex-wrap align-center">
+            <div class="form-group mb-0">
+                <select class="form-control" name="flagged_only">
+                    <option value="">All Transactions</option>
+                    <option value="true" {% if request.args.get('flagged_only')=='true' %}selected{% endif %}>Flagged
+                        Only</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Filter</button>
+            <a href="{{ url_for('fraud.transactions') }}" class="btn btn-secondary">Clear</a>
+        </form>
+    </div>
+</div>
+
+<!-- Transactions -->
+<div class="card">
+    <div class="card-header">
+        📋 Transactions
+    </div>
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Risk</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if transactions %}
+                {% for txn in transactions %}
+                <tr>
+                    <td>{{ txn.transaction_id[:8] }}...</td>
+                    <td><span class="badge badge-primary">{{ txn.transaction_type }}</span></td>
+                    <td class="text-primary"><strong>${{ "{:,.2f}".format(txn.amount) }}</strong></td>
+                    <td>{{ txn.timestamp }}</td>
+                    <td>
+                        {% if txn.fraud_flag %}
+                        <span class="badge badge-danger">Flagged</span>
+                        {% else %}
+                        <span class="badge badge-success">{{ txn.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if txn.amount > 10000 %}
+                        <span class="badge badge-warning">High</span>
+                        {% else %}
+                        <span class="badge badge-success">Normal</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('fraud.transaction_detail', transaction_id=txn.transaction_id) }}"
+                            class="btn btn-sm btn-outline">
+                            Details
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted">No transactions found</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

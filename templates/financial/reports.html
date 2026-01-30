@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Financial Reports - {{ app_name }}{% endblock %}
+
+{% block page_title %}Custom Reports{% endblock %}
+{% block page_description %}Build and export custom financial reports{% endblock %}
+
+{% block content %}
+<!-- Report Builder -->
+<div class="card mb-2">
+    <div class="card-header">
+        📊 Report Builder
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('financial.reports') }}">
+            <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+                <div class="form-group">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" class="form-control" name="start_date">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">End Date</label>
+                    <input type="date" class="form-control" name="end_date">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Transaction Type</label>
+                    <select class="form-control" name="transaction_type">
+                        <option value="">All Types</option>
+                        <option value="deposit">Deposits</option>
+                        <option value="withdrawal">Withdrawals</option>
+                        <option value="transfer">Transfers</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Minimum Amount</label>
+                    <input type="number" class="form-control" name="min_amount" step="0.01" placeholder="0.00">
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Generate Report</button>
+                <a href="{{ url_for('financial.export_report') }}" class="btn btn-success">Export Last Report</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Report Results -->
+{% if report %}
+<div class="card">
+    <div class="card-header">
+        📈 Report Results
+    </div>
+    <div class="card-body">
+        <div class="kpi-grid mb-2">
+            <div class="kpi-card">
+                <div class="kpi-label">Total Transactions</div>
+                <div class="kpi-value">{{ report.total_count }}</div>
+            </div>
+            <div class="kpi-card success">
+                <div class="kpi-label">Total Volume</div>
+                <div class="kpi-value">${{ "{:,.2f}".format(report.total_volume) }}</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Average Amount</div>
+                <div class="kpi-value">${{ "{:,.2f}".format(report.avg_amount) }}</div>
+            </div>
+        </div>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for txn in report.transactions %}
+                <tr>
+                    <td>{{ txn.transaction_id[:8] }}...</td>
+                    <td><span class="badge badge-primary">{{ txn.transaction_type }}</span></td>
+                    <td class="text-primary"><strong>${{ "{:,.2f}".format(txn.amount) }}</strong></td>
+                    <td>{{ txn.timestamp }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

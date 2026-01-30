@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Transaction History - {{ app_name }}{% endblock %}
+
+{% block page_title %}Transaction History{% endblock %}
+
+{% block content %}
+<!-- Filters -->
+<div class="card">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('transactions.history') }}" class="d-flex gap-2 flex-wrap align-center">
+            <div class="form-group mb-0">
+                <select class="form-control" name="type">
+                    <option value="">All Types</option>
+                    <option value="deposit" {% if transaction_type=='deposit' %}selected{% endif %}>Deposits</option>
+                    <option value="withdrawal" {% if transaction_type=='withdrawal' %}selected{% endif %}>Withdrawals
+                    </option>
+                    <option value="transfer" {% if transaction_type=='transfer' %}selected{% endif %}>Transfers</option>
+                </select>
+            </div>
+
+            <div class="form-group mb-0">
+                <input type="text" class="form-control" name="search" placeholder="Search..." value="{{ search }}">
+            </div>
+
+            <button type="submit" class="btn btn-primary">Filter</button>
+            <a href="{{ url_for('transactions.history') }}" class="btn btn-secondary">Clear</a>
+            <a href="{{ url_for('transactions.export') }}" class="btn btn-success">Export CSV</a>
+        </form>
+    </div>
+</div>
+
+<!-- Transactions Table -->
+<div class="card">
+    <div class="card-header">
+        📜 Your Transactions
+    </div>
+    <div class="card-body">
+        {% if transactions %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for txn in transactions %}
+                <tr>
+                    <td>{{ txn.transaction_id[:8] }}...</td>
+                    <td>
+                        <span class="badge badge-{{ 'success' if txn.transaction_type == 'deposit' else 'primary' }}">
+                            {{ txn.transaction_type }}
+                        </span>
+                    </td>
+                    <td class="{{ 'text-success' if txn.transaction_type == 'deposit' else 'text-primary' }}">
+                        <strong>${{ "{:,.2f}".format(txn.amount) }}</strong>
+                    </td>
+                    <td>{{ txn.timestamp }}</td>
+                    <td>
+                        {% if txn.fraud_flag %}
+                        <span class="badge badge-danger">Flagged</span>
+                        {% else %}
+                        <span class="badge badge-success">{{ txn.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('transactions.detail', transaction_id=txn.transaction_id) }}"
+                            class="btn btn-sm btn-outline">
+                            View
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        {% if total_pages > 1 %}
+        <div class="pagination">
+            {% if page > 1 %}
+            <a href="{{ url_for('transactions.history', page=page-1, type=transaction_type, search=search) }}"
+                class="pagination-btn">
+                ← Previous
+            </a>
+            {% endif %}
+
+            <span class="pagination-btn active">
+                Page {{ page }} of {{ total_pages }}
+            </span>
+
+            {% if page < total_pages %} <a
+                href="{{ url_for('transactions.history', page=page+1, type=transaction_type, search=search) }}"
+                class="pagination-btn">
+                Next →
+                </a>
+                {% endif %}
+        </div>
+        {% endif %}
+        {% else %}
+        <p class="text-muted text-center">No transactions found.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

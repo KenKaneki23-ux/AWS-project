@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Transaction Details - {{ app_name }}{% endblock %}
+
+{% block page_title %}Transaction Details{% endblock %}
+
+{% block content %}
+{% if transaction %}
+<div class="card">
+    <div class="card-header">
+        💳 Transaction {{ transaction.transaction_id[:8] }}...
+    </div>
+    <div class="card-body">
+        <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+            <div>
+                <p class="text-muted mb-0">Transaction ID</p>
+                <p style="font-family: monospace; font-size: 0.875rem;">{{ transaction.transaction_id }}</p>
+            </div>
+            <div>
+                <p class="text-muted mb-0">Type</p>
+                <h3><span class="badge badge-primary">{{ transaction.transaction_type }}</span></h3>
+            </div>
+            <div>
+                <p class="text-muted mb-0">Amount</p>
+                <h3 class="text-success">${{ "{:,.2f}".format(transaction.amount) }}</h3>
+            </div>
+            <div>
+                <p class="text-muted mb-0">Status</p>
+                <h3>
+                    {% if transaction.fraud_flag %}
+                    <span class="badge badge-danger">Flagged</span>
+                    {% else %}
+                    <span class="badge badge-success">{{ transaction.status }}</span>
+                    {% endif %}
+                </h3>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+            <div>
+                <p class="text-muted mb-0">Account ID</p>
+                <p style="font-family: monospace; font-size: 0.875rem;">{{ transaction.account_id }}</p>
+            </div>
+            {% if transaction.target_account_id %}
+            <div>
+                <p class="text-muted mb-0">Target Account</p>
+                <p style="font-family: monospace; font-size: 0.875rem;">{{ transaction.target_account_id }}</p>
+            </div>
+            {% endif %}
+            <div>
+                <p class="text-muted mb-0">Timestamp</p>
+                <p>{{ transaction.timestamp }}</p>
+            </div>
+        </div>
+
+        {% if transaction.description %}
+        <hr>
+        <div>
+            <p class="text-muted mb-0">Description</p>
+            <p>{{ transaction.description }}</p>
+        </div>
+        {% endif %}
+    </div>
+    <div class="card-footer">
+        <a href="javascript:history.back()" class="btn btn-secondary">Back</a>
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body text-center">
+        <p class="text-muted">Transaction not found</p>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Back to Dashboard</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ app_name }}{% endblock %}</title>
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-messages">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    {% if current_user.is_authenticated %}
+    <!-- Dashboard Layout with Navbar -->
+    <div class="dashboard">
+        <!-- Navigation Bar -->
+        <nav class="navbar">
+            <div class="navbar-container">
+                <a href="{{ url_for('dashboard') }}" class="navbar-brand">
+                    🏦 {{ app_name }}
+                </a>
+
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+
+                <ul class="navbar-menu" id="navbarMenu">
+                    <li class="navbar-item">
+                        <a href="{{ url_for('dashboard') }}" class="navbar-link">
+                            📊 Dashboard
+                        </a>
+                    </li>
+
+                    {% if current_user.role == 'FRAUD_ANALYST' %}
+                    <li class="navbar-item">
+                        <a href="{{ url_for('fraud.dashboard') }}" class="navbar-link active">
+                            🚨 Fraud
+                        </a>
+                    </li>
+                    <li class="navbar-item">
+                        <a href="{{ url_for('fraud.transactions') }}" class="navbar-link">
+                            📋 Monitoring
+                        </a>
+                    </li>
+                    {% elif current_user.role == 'FINANCIAL_MANAGER' %}
+                    <li class="navbar-item">
+                        <a href="{{ url_for('financial.dashboard') }}" class="navbar-link active">
+                            📈 Analytics
+                        </a>
+                    </li>
+                    <li class="navbar-item">
+                        <a href="{{ url_for('financial.reports') }}" class="navbar-link">
+                            📑 Reports
+                        </a>
+                    </li>
+                    {% elif current_user.role == 'COMPLIANCE_OFFICER' %}
+                    <li class="navbar-item">
+                        <a href="{{ url_for('compliance.dashboard') }}" class="navbar-link active">
+                            ✅ Compliance
+                        </a>
+                    </li>
+                    <li class="navbar-item">
+                        <a href="{{ url_for('compliance.audit') }}" class="navbar-link">
+                            📜 Audit
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <li class="navbar-item">
+                        <a href="{{ url_for('transactions.create') }}" class="navbar-link">
+                            💳 New Transaction
+                        </a>
+                    </li>
+                    <li class="navbar-item">
+                        <a href="{{ url_for('transactions.history') }}" class="navbar-link">
+                            📜 History
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="navbar-actions">
+                    <!-- Dark Mode Toggle -->
+                    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode"
+                        aria-label="Toggle dark mode">
+                        <span id="theme-icon">🌙</span>
+                    </button>
+
+                    <!-- Notifications -->
+                    <div class="notification-icon" title="Notifications">
+                        🔔
+                        {% if unread_notifications > 0 %}
+                        <span class="notification-badge">{{ unread_notifications }}</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- User Menu -->
+                    <div class="user-menu">
+                        <div class="user-avatar">{{ current_user.name[0].upper() }}</div>
+                        <div class="user-info">
+                            <div class="user-name">{{ current_user.name }}</div>
+                            <div class="user-role">{{ current_user.get_role_display() }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Logout -->
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-secondary">
+                        Logout
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div style="margin-bottom: var(--spacing-md);">
+                <h1 style="margin-bottom: 0.5rem;">{% block page_title %}Dashboard{% endblock %}</h1>
+                <p class="text-muted">{% block page_description %}Welcome back!{% endblock %}</p>
+            </div>
+
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+    {% else %}
+    <!-- Public Content (login/signup pages) -->
+    {% block public_content %}{% endblock %}
+    {% endif %}
+
+    <!-- Scripts -->
+    <script>
+        // Dark Mode Toggle
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // Update icon
+            document.getElementById('theme-icon').textContent = newTheme === 'dark' ? '☀️' : '🌙';
+        }
+
+        // Load saved theme on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.getElementById('theme-icon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+        });
+
+        // Mobile Menu Toggle
+        function toggleMobileMenu() {
+            const menu = document.getElementById('navbarMenu');
+            menu.classList.toggle('mobile-active');
+        }
+
+        // Auto-dismiss flash messages after 5 seconds
+        setTimeout(() => {
+            const flashMessages = document.querySelector('.flash-messages');
+            if (flashMessages) {
+                flashMessages.style.opacity = '0';
+                setTimeout(() => flashMessages.remove(), 300);
+            }
+        }, 5000);
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

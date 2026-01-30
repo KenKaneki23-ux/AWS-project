@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Login - {{ app_name }}{% endblock %}
+
+{% block public_content %}
+<div
+    style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background-color: var(--bg-primary);">
+    <div class="card" style="max-width: 400px; width: 100%; margin: var(--spacing-md);">
+        <div class="text-center mb-2">
+            <h1 style="color: var(--primary-blue); margin-bottom: var(--spacing-xs);">🏦</h1>
+            <h2>{{ app_name }}</h2>
+            <p class="text-muted">Sign in to your account</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.login') }}">
+            <div class="form-group">
+                <label class="form-label" for="email">Email Address</label>
+                <input type="email" class="form-control" id="email" name="email" required autofocus>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+
+            <div class="form-group" style="display: flex; align-items: center; gap: var(--spacing-xs);">
+                <input type="checkbox" id="remember" name="remember">
+                <label for="remember" style="margin-bottom: 0;">Remember me</label>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-full">
+                Sign In
+            </button>
+        </form>
+
+        <div class="text-center mt-2">
+            <p class="text-muted">
+                Don't have an account?
+                <a href="{{ url_for('auth.signup') }}" style="font-weight: 600;">Sign up</a>
+            </p>
+        </div>
+
+        <div class="mt-2"
+            style="padding: var(--spacing-sm); background-color: var(--bg-primary); border-radius: var(--border-radius);">
+            <p style="font-size: 0.875rem; font-weight: 600; margin-bottom: var(--spacing-xs);">Test Accounts:</p>
+            <p style="font-size: 0.75rem; margin-bottom: 0.25rem;">• fraud@test.com / test123</p>
+            <p style="font-size: 0.75rem; margin-bottom: 0.25rem;">• finance@test.com / test123</p>
+            <p style="font-size: 0.75rem; margin-bottom: 0;">• compliance@test.com / test123</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

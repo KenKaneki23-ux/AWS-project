@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Root Cause Analysis - {{ app_name }}{% endblock %}
+
+{% block page_title %}Root Cause Analysis{% endblock %}
+{% block page_description %}Drill down into compliance metrics{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        📊 Metric Breakdown
+    </div>
+    <div class="card-body">
+        <p class="text-muted">Detailed analysis of compliance metrics and root cause investigation.</p>
+
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-label">Large Transactions</div>
+                <div class="kpi-value">{{ metrics.large_transactions or 0 }}</div>
+                <div class="kpi-change">&gt; $10,000</div>
+            </div>
+            <div class="kpi-card warning">
+                <div class="kpi-label">Suspicious Activity</div>
+                <div class="kpi-value">{{ metrics.suspicious_activities or 0 }}</div>
+                <div class="kpi-change">Flagged</div>
+            </div>
+            <div class="kpi-card success">
+                <div class="kpi-label">Verification Rate</div>
+                <div class="kpi-value">{{ "{:.1f}".format(metrics.verification_rate or 100) }}%</div>
+            </div>
+        </div>
+
+        <hr>
+
+        <p><strong>Analysis:</strong> Review the metrics above to identify patterns and potential compliance issues.</p>
+    </div>
+    <div class="card-footer">
+        <a href="{{ url_for('compliance.dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

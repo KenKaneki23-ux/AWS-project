@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up - {{ app_name }}{% endblock %}
+
+{% block public_content %}
+<div
+    style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background-color: var(--bg-primary); padding: var(--spacing-md);">
+    <div class="card" style="max-width: 450px; width: 100%;">
+        <div class="text-center mb-2">
+            <h1 style="color: var(--primary-blue); margin-bottom: var(--spacing-xs);">🏦</h1>
+            <h2>Create Account</h2>
+            <p class="text-muted">Join {{ app_name }}</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.signup') }}">
+            <div class="form-group">
+                <label class="form-label" for="name">Full Name</label>
+                <input type="text" class="form-control" id="name" name="name" required autofocus>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="email">Email Address</label>
+                <input type="email" class="form-control" id="email" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="role">Role</label>
+                <select class="form-control" id="role" name="role" required>
+                    <option value="">Select your role</option>
+                    <option value="FRAUD_ANALYST">Fraud Analyst</option>
+                    <option value="FINANCIAL_MANAGER">Financial Manager</option>
+                    <option value="COMPLIANCE_OFFICER">Compliance Officer</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+                <small class="text-muted">At least 6 characters</small>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="confirm_password">Confirm Password</label>
+                <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-full">
+                Create Account
+            </button>
+        </form>
+
+        <div class="text-center mt-2">
+            <p class="text-muted">
+                Already have an account?
+                <a href="{{ url_for('auth.login') }}" style="font-weight: 600;">Sign in</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

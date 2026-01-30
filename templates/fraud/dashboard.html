@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Fraud Analyst Dashboard - {{ app_name }}{% endblock %}
+
+{% block page_title %}Fraud Monitoring Dashboard{% endblock %}
+
+{% block content %}
+<!-- KPI Cards -->
+<div class="kpi-grid">
+    <div class="kpi-card danger">
+        <div class="kpi-label">Total Flagged</div>
+        <div class="kpi-value">{{ stats.total_flagged }}</div>
+        <div class="kpi-change">All time</div>
+    </div>
+
+    <div class="kpi-card warning">
+        <div class="kpi-label">Recent Flags (24h)</div>
+        <div class="kpi-value">{{ stats.recent_flagged }}</div>
+        <div class="kpi-change">Last 24 hours</div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-label">Frozen Accounts</div>
+        <div class="kpi-value">{{ stats.frozen_accounts }}</div>
+        <div class="kpi-change">Currently frozen</div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-label">High-Value Txns</div>
+        <div class="kpi-value">{{ stats.high_value_transactions }}</div>
+        <div class="kpi-change">&gt; $10,000</div>
+    </div>
+</div>
+
+<!-- Suspicious Transactions -->
+<div class="card">
+    <div class="card-header">
+        🚨 Suspicious Transactions
+    </div>
+    <div class="card-body">
+        {% if suspicious %}
+        <div class="transaction-list">
+            {% for txn in suspicious %}
+            <div class="transaction-item">
+                <div class="transaction-icon {{ txn.transaction_type }}">
+                    {{ txn.transaction_type[0].upper() }}
+                </div>
+                <div class="transaction-details">
+                    <div class="transaction-type">
+                        {{ txn.transaction_type.title() }} -
+                        <span class="badge badge-danger">Flagged</span>
+                    </div>
+                    <div class="transaction-time">
+                        {{ txn.timestamp }}
+                    </div>
+                </div>
+                <div class="transaction-amount">
+                    ${{ "{:,.2f}".format(txn.amount) }}
+                </div>
+                <div>
+                    <a href="{{ url_for('fraud.transaction_detail', transaction_id=txn.transaction_id) }}"
+                        class="btn btn-sm btn-primary">
+                        View
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted text-center">No suspicious transactions found.</p>
+        {% endif %}
+    </div>
+    <div class="card-footer">
+        <a href="{{ url_for('fraud.transactions', flagged_only='true') }}" class="btn btn-outline">
+            View All Flagged Transactions →
+        </a>
+    </div>
+</div>
+
+<!-- Recent Alerts -->
+<div class="card">
+    <div class="card-header">
+        ⚡ Recent Alerts (24 hours)
+    </div>
+    <div class="card-body">
+        {% if recent_alerts %}
+        <div class="transaction-list">
+            {% for alert in recent_alerts %}
+            <div class="transaction-item">
+                <div class="transaction-details">
+                    <div class="transaction-type">
+                        Transaction {{ alert.transaction_id[:8] }}... - ${{ "{:,.2f}".format(alert.amount) }}
+                    </div>
+                    <div class="transaction-time">
+                        {{ alert.timestamp }}
+                    </div>
+                </div>
+                <div>
+                    <span class="badge badge-danger">Alert</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted text-center">No recent alerts.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

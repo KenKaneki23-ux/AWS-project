@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Financial Dashboard - {{ app_name }}{% endblock %}
+
+{% block page_title %}Financial Analytics{% endblock %}
+
+{% block content %}
+<!-- KPI Summary -->
+<div class="kpi-grid">
+    <div class="kpi-card success">
+        <div class="kpi-label">Total Transactions</div>
+        <div class="kpi-value">{{ "{:,}".format(kpis.total_transactions) }}</div>
+        <div class="kpi-change">All time</div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-label">Total Volume</div>
+        <div class="kpi-value">${{ "{:,.2f}".format(kpis.total_volume) }}</div>
+        <div class="kpi-change">Transaction value</div>
+    </div>
+
+    <div class="kpi-card success">
+        <div class="kpi-label">Active Accounts</div>
+        <div class="kpi-value">{{ kpis.active_accounts }}</div>
+        <div class="kpi-change">{{ "{:.1f}".format((kpis.active_accounts / kpis.total_accounts * 100)) }}% of total
+        </div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-label">Avg. Balance</div>
+        <div class="kpi-value">${{ "{:,.2f}".format(kpis.avg_balance) }}</div>
+        <div class="kpi-change">Per active account</div>
+    </div>
+</div>
+
+<!-- Transaction Breakdown -->
+<div class="card">
+    <div class="card-header">
+        💰 Transaction Breakdown
+    </div>
+    <div class="card-body">
+        <div class="kpi-grid">
+            <div>
+                <p class="text-muted mb-0">Deposits</p>
+                <h3 class="text-success">${{ "{:,.2f}".format(kpis.total_deposits) }}</h3>
+            </div>
+            <div>
+                <p class="text-muted mb-0">Withdrawals</p>
+                <h3 class="text-danger">${{ "{:,.2f}".format(kpis.total_withdrawals) }}</h3>
+            </div>
+            <div>
+                <p class="text-muted mb-0">Transfers</p>
+                <h3 class="text-primary">${{ "{:,.2f}".format(kpis.total_transfers) }}</h3>
+            </div>
+            <div>
+                <p class="text-muted mb-0">Net Flow</p>
+                <h3 class="{{ 'text-success' if kpis.net_flow >= 0 else 'text-danger' }}">${{
+                    "{:,.2f}".format(kpis.net_flow) }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top Transactions -->
+<div class="card">
+    <div class="card-header">
+        📊 Top Transactions
+    </div>
+    <div class="card-body">
+        {% if top_transactions %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Date</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for txn in top_transactions %}
+                <tr>
+                    <td>{{ txn.transaction_id[:8] }}...</td>
+                    <td><span class="badge badge-primary">{{ txn.transaction_type }}</span></td>
+                    <td class="text-primary"><strong>${{ "{:,.2f}".format(txn.amount) }}</strong></td>
+                    <td>{{ txn.timestamp }}</td>
+                    <td>{{ txn.description or '-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted text-center">No transactions found.</p>
+        {% endif %}
+    </div>
+    <div class="card-footer">
+        <a href="{{ url_for('financial.transactions') }}" class="btn btn-outline">
+            View All Transactions →
+        </a>
+        <a href="{{ url_for('financial.reports') }}" class="btn btn-primary">
+            Create Custom Report
+        </a>
+    </div>
+</div>
+{% endblock %}
