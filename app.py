@@ -92,6 +92,8 @@ def internal_error(error):
 @app.context_processor
 def inject_globals():
     """Inject global variables into templates"""
+    from datetime import datetime
+    
     unread_count = 0
     if current_user.is_authenticated:
         from services.notification_service import NotificationService
@@ -99,7 +101,8 @@ def inject_globals():
     
     return {
         'app_name': 'Cloud Bank Analytics',
-        'unread_notifications': unread_count
+        'unread_notifications': unread_count,
+        'now': datetime.now()
     }
 
 # Development server

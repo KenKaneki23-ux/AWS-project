@@ -4,48 +4,56 @@
 
 {% block public_content %}
 <div
-    style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background-color: var(--bg-primary);">
-    <div class="card" style="max-width: 400px; width: 100%; margin: var(--spacing-md);">
-        <div class="text-center mb-2">
-            <h1 style="color: var(--primary-blue); margin-bottom: var(--spacing-xs);">🏦</h1>
-            <h2>{{ app_name }}</h2>
-            <p class="text-muted">Sign in to your account</p>
+    style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background-color: var(--bg-primary); padding: var(--spacing-lg);">
+    <div class="card" style="max-width: 420px; width: 100%; padding: var(--spacing-xl);">
+        <div class="text-center" style="margin-bottom: var(--spacing-lg);">
+            <h1 style="font-size: 48px; margin-bottom: var(--spacing-sm);">🏦</h1>
+            <h2 style="margin-bottom: var(--spacing-xs);">{{ app_name }}</h2>
+            <p class="text-muted" style="margin-bottom: 0;">Sign in to your account</p>
         </div>
 
         <form method="POST" action="{{ url_for('auth.login') }}">
             <div class="form-group">
                 <label class="form-label" for="email">Email Address</label>
-                <input type="email" class="form-control" id="email" name="email" required autofocus>
+                <input type="email" class="form-control" id="email" name="email" required autofocus
+                    placeholder="Enter your email">
             </div>
 
             <div class="form-group">
                 <label class="form-label" for="password">Password</label>
-                <input type="password" class="form-control" id="password" name="password" required>
+                <input type="password" class="form-control" id="password" name="password" required
+                    placeholder="Enter your password">
             </div>
 
-            <div class="form-group" style="display: flex; align-items: center; gap: var(--spacing-xs);">
-                <input type="checkbox" id="remember" name="remember">
-                <label for="remember" style="margin-bottom: 0;">Remember me</label>
+            <div class="form-group" style="display: flex; align-items: center; gap: var(--spacing-sm);">
+                <input type="checkbox" id="remember" name="remember"
+                    style="width: 16px; height: 16px; cursor: pointer;">
+                <label for="remember" style="margin-bottom: 0; cursor: pointer; user-select: none;">Remember me</label>
             </div>
 
-            <button type="submit" class="btn btn-primary w-full">
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: var(--spacing-md);">
                 Sign In
             </button>
         </form>
 
-        <div class="text-center mt-2">
-            <p class="text-muted">
+        <div class="text-center" style="margin-top: var(--spacing-lg);">
+            <p class="text-muted" style="margin-bottom: 0;">
                 Don't have an account?
-                <a href="{{ url_for('auth.signup') }}" style="font-weight: 600;">Sign up</a>
+                <a href="{{ url_for('auth.signup') }}" class="text-blue" style="font-weight: 600;">Sign up</a>
             </p>
         </div>
 
-        <div class="mt-2"
-            style="padding: var(--spacing-sm); background-color: var(--bg-primary); border-radius: var(--border-radius);">
-            <p style="font-size: 0.875rem; font-weight: 600; margin-bottom: var(--spacing-xs);">Test Accounts:</p>
-            <p style="font-size: 0.75rem; margin-bottom: 0.25rem;">• fraud@test.com / test123</p>
-            <p style="font-size: 0.75rem; margin-bottom: 0.25rem;">• finance@test.com / test123</p>
-            <p style="font-size: 0.75rem; margin-bottom: 0;">• compliance@test.com / test123</p>
+        <div
+            style="margin-top: var(--spacing-lg); padding: var(--spacing-md); background-color: rgba(59, 130, 246, 0.1); border-radius: var(--radius-md); border-left: 3px solid var(--accent-blue);">
+            <p
+                style="font-size: var(--font-xs); font-weight: 600; margin-bottom: var(--spacing-sm); color: var(--accent-blue-light);">
+                🔑 Test Accounts:</p>
+            <p style="font-size: var(--font-xs); margin-bottom: 4px; color: var(--text-secondary);">• fraud@test.com /
+                test123</p>
+            <p style="font-size: var(--font-xs); margin-bottom: 4px; color: var(--text-secondary);">• finance@test.com /
+                test123</p>
+            <p style="font-size: var(--font-xs); margin-bottom: 0; color: var(--text-secondary);">• compliance@test.com
+                / test123</p>
         </div>
     </div>
 </div>

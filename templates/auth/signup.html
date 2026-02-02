@@ -4,23 +4,25 @@
 
 {% block public_content %}
 <div
-    style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background-color: var(--bg-primary); padding: var(--spacing-md);">
-    <div class="card" style="max-width: 450px; width: 100%;">
-        <div class="text-center mb-2">
-            <h1 style="color: var(--primary-blue); margin-bottom: var(--spacing-xs);">🏦</h1>
-            <h2>Create Account</h2>
-            <p class="text-muted">Join {{ app_name }}</p>
+    style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background-color: var(--bg-primary); padding: var(--spacing-lg);">
+    <div class="card" style="max-width: 480px; width: 100%; padding: var(--spacing-xl);">
+        <div class="text-center" style="margin-bottom: var(--spacing-lg);">
+            <h1 style="font-size: 48px; margin-bottom: var(--spacing-sm);">🏦</h1>
+            <h2 style="margin-bottom: var(--spacing-xs);">Create Account</h2>
+            <p class="text-muted" style="margin-bottom: 0;">Join {{ app_name }}</p>
         </div>
 
         <form method="POST" action="{{ url_for('auth.signup') }}">
             <div class="form-group">
                 <label class="form-label" for="name">Full Name</label>
-                <input type="text" class="form-control" id="name" name="name" required autofocus>
+                <input type="text" class="form-control" id="name" name="name" required autofocus
+                    placeholder="Enter your full name">
             </div>
 
             <div class="form-group">
                 <label class="form-label" for="email">Email Address</label>
-                <input type="email" class="form-control" id="email" name="email" required>
+                <input type="email" class="form-control" id="email" name="email" required
+                    placeholder="Enter your email">
             </div>
 
             <div class="form-group">
@@ -35,24 +37,26 @@
 
             <div class="form-group">
                 <label class="form-label" for="password">Password</label>
-                <input type="password" class="form-control" id="password" name="password" required>
+                <input type="password" class="form-control" id="password" name="password" required
+                    placeholder="Create a password">
                 <small class="text-muted">At least 6 characters</small>
             </div>
 
             <div class="form-group">
                 <label class="form-label" for="confirm_password">Confirm Password</label>
-                <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                <input type="password" class="form-control" id="confirm_password" name="confirm_password" required
+                    placeholder="Confirm your password">
             </div>
 
-            <button type="submit" class="btn btn-primary w-full">
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: var(--spacing-md);">
                 Create Account
             </button>
         </form>
 
-        <div class="text-center mt-2">
-            <p class="text-muted">
+        <div class="text-center" style="margin-top: var(--spacing-lg);">
+            <p class="text-muted" style="margin-bottom: 0;">
                 Already have an account?
-                <a href="{{ url_for('auth.login') }}" style="font-weight: 600;">Sign in</a>
+                <a href="{{ url_for('auth.login') }}" class="text-blue" style="font-weight: 600;">Sign in</a>
             </p>
         </div>
     </div>

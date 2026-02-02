@@ -2,7 +2,8 @@
 
 {% block title %}Fraud Analyst Dashboard - {{ app_name }}{% endblock %}
 
-{% block page_title %}Fraud Monitoring Dashboard{% endblock %}
+{% block page_title %}Fraud Monitoring{% endblock %}
+{% block page_description %}Real-time fraud detection and suspicious transaction monitoring{% endblock %}
 
 {% block content %}
 <!-- KPI Cards -->
@@ -10,100 +11,261 @@
     <div class="kpi-card danger">
         <div class="kpi-label">Total Flagged</div>
         <div class="kpi-value">{{ stats.total_flagged }}</div>
-        <div class="kpi-change">All time</div>
+        <div class="kpi-change negative">🚨 All time</div>
     </div>
 
     <div class="kpi-card warning">
         <div class="kpi-label">Recent Flags (24h)</div>
         <div class="kpi-value">{{ stats.recent_flagged }}</div>
-        <div class="kpi-change">Last 24 hours</div>
+        <div class="kpi-change negative">⚠️ Last 24 hours</div>
     </div>
 
     <div class="kpi-card">
         <div class="kpi-label">Frozen Accounts</div>
         <div class="kpi-value">{{ stats.frozen_accounts }}</div>
-        <div class="kpi-change">Currently frozen</div>
+        <div class="kpi-change">🔒 Currently frozen</div>
     </div>
 
-    <div class="kpi-card">
+    <div class="kpi-card warning">
         <div class="kpi-label">High-Value Txns</div>
         <div class="kpi-value">{{ stats.high_value_transactions }}</div>
-        <div class="kpi-change">&gt; $10,000</div>
+        <div class="kpi-change">💰 > $10,000</div>
+    </div>
+</div>
+
+<!-- Main Grid Layout -->
+<div class="card-grid">
+    <!-- Risk Score Donut Chart -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">⚠️ Risk Overview</div>
+            <button class="card-action-btn">↗️</button>
+        </div>
+        <div class="card-body">
+            <div class="donut-chart-wrapper">
+                <div class="chart-container chart-container-sm">
+                    <canvas id="riskChart"></canvas>
+                </div>
+                <div class="donut-chart-center">
+                    <div class="donut-chart-value">{{ stats.total_flagged }}</div>
+                    <div class="donut-chart-label">Flagged</div>
+                </div>
+            </div>
+            <div class="chart-legend" style="margin-top: var(--spacing-lg);">
+                <div class="chart-legend-item">
+                    <div class="chart-legend-color" style="background: #ef4444;"></div>
+                    <span class="chart-legend-label">High Risk</span>
+                </div>
+                <div class="chart-legend-item">
+                    <div class="chart-legend-color" style="background: #f59e0b;"></div>
+                    <span class="chart-legend-label">Medium Risk</span>
+                </div>
+                <div class="chart-legend-item">
+                    <div class="chart-legend-color" style="background: #10b981;"></div>
+                    <span class="chart-legend-label">Low Risk</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fraud Trend Line Chart -->
+    <div class="card" style="grid-column: span 2;">
+        <div class="card-header">
+            <div class="card-title">📈 Fraud Detection Trend</div>
+            <div class="card-actions">
+                <span class="badge badge-warning">{{ stats.recent_flagged }} this week</span>
+                <button class="card-action-btn">↗️</button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="chart-container chart-container-md">
+                <canvas id="fraudTrendChart"></canvas>
+            </div>
+        </div>
     </div>
 </div>
 
 <!-- Suspicious Transactions -->
 <div class="card">
     <div class="card-header">
-        🚨 Suspicious Transactions
+        <div class="card-title">🚨 Suspicious Transactions</div>
+        <div class="card-actions">
+            <span class="badge badge-danger">{{ stats.total_flagged }} flagged</span>
+            <button class="btn btn-sm btn-primary"
+                onclick="window.location.href='{{ url_for('fraud.transactions', flagged_only='true') }}'">
+                View All →
+            </button>
+        </div>
     </div>
     <div class="card-body">
         {% if suspicious %}
-        <div class="transaction-list">
+        <ul class="transaction-list">
             {% for txn in suspicious %}
-            <div class="transaction-item">
-                <div class="transaction-icon {{ txn.transaction_type }}">
-                    {{ txn.transaction_type[0].upper() }}
-                </div>
-                <div class="transaction-details">
-                    <div class="transaction-type">
-                        {{ txn.transaction_type.title() }} -
-                        <span class="badge badge-danger">Flagged</span>
+            <li class="transaction-item">
+                <div class="transaction-info">
+                    <div class="transaction-icon" style="background: rgba(239, 68, 68, 0.2);">
+                        🚨
                     </div>
-                    <div class="transaction-time">
-                        {{ txn.timestamp }}
+                    <div class="transaction-details">
+                        <div class="transaction-name">
+                            {{ txn.transaction_type.title() }} Transaction
+                            <span class="badge badge-danger">Flagged</span>
+                        </div>
+                        <div class="transaction-meta">
+                            <span>{{ txn.transaction_id[:8] }}...</span>
+                            <span>•</span>
+                            <span>{{ txn.timestamp.strftime('%b %d, %Y %H:%M') if txn.timestamp.strftime else
+                                txn.timestamp }}</span>
+                            {% if txn.amount > 10000 %}
+                            <span>•</span>
+                            <span class="badge badge-warning">High Value</span>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
-                <div class="transaction-amount">
-                    ${{ "{:,.2f}".format(txn.amount) }}
-                </div>
-                <div>
+                <div style="display: flex; align-items: center; gap: var(--spacing-md);">
+                    <div class="transaction-amount negative">
+                        ${{ "{:,.2f}".format(txn.amount) }}
+                    </div>
                     <a href="{{ url_for('fraud.transaction_detail', transaction_id=txn.transaction_id) }}"
-                        class="btn btn-sm btn-primary">
-                        View
+                        class="btn btn-sm btn-outline">
+                        Review
                     </a>
                 </div>
-            </div>
+            </li>
             {% endfor %}
-        </div>
+        </ul>
         {% else %}
-        <p class="text-muted text-center">No suspicious transactions found.</p>
+        <div class="chart-no-data">
+            <div class="chart-no-data-icon">✅</div>
+            <div class="chart-no-data-text">No suspicious transactions found</div>
+        </div>
         {% endif %}
     </div>
-    <div class="card-footer">
-        <a href="{{ url_for('fraud.transactions', flagged_only='true') }}" class="btn btn-outline">
-            View All Flagged Transactions →
+    <div class="card-footer" style="display: flex; justify-content: flex-end;">
+        <a href="{{ url_for('fraud.transactions', flagged_only='true') }}" class="btn btn-danger btn-sm">
+            🚨 View All Flagged
         </a>
     </div>
 </div>
 
-<!-- Recent Alerts -->
-<div class="card">
-    <div class="card-header">
-        ⚡ Recent Alerts (24 hours)
-    </div>
-    <div class="card-body">
-        {% if recent_alerts %}
-        <div class="transaction-list">
-            {% for alert in recent_alerts %}
-            <div class="transaction-item">
-                <div class="transaction-details">
-                    <div class="transaction-type">
-                        Transaction {{ alert.transaction_id[:8] }}... - ${{ "{:,.2f}".format(alert.amount) }}
-                    </div>
-                    <div class="transaction-time">
-                        {{ alert.timestamp }}
-                    </div>
-                </div>
-                <div>
-                    <span class="badge badge-danger">Alert</span>
-                </div>
-            </div>
-            {% endfor %}
+<!-- Recent Alerts Grid -->
+<div class="card-grid card-grid-2">
+    <!-- Recent Alerts List -->
+    <div class="card" style="grid-column: span 2;">
+        <div class="card-header">
+            <div class="card-title">⚡ Recent Alerts (24 hours)</div>
         </div>
-        {% else %}
-        <p class="text-muted text-center">No recent alerts.</p>
-        {% endif %}
+        <div class="card-body">
+            {% if recent_alerts %}
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Transaction ID</th>
+                            <th>Amount</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for alert in recent_alerts %}
+                        <tr>
+                            <td>{{ alert.transaction_id[:12] }}...</td>
+                            <td class="text-primary"><strong>${{ "{:,.2f}".format(alert.amount) }}</strong></td>
+                            <td>{{ alert.timestamp.strftime('%H:%M:%S') if alert.timestamp.strftime else alert.timestamp
+                                }}</td>
+                            <td><span class="badge badge-danger">Alert</span></td>
+                            <td>
+                                <a href="{{ url_for('fraud.transaction_detail', transaction_id=alert.transaction_id) }}"
+                                    class="btn btn-sm btn-outline">
+                                    Investigate
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="chart-no-data">
+                <div class="chart-no-data-icon">🎉</div>
+                <div class="chart-no-data-text">No recent alerts - all clear!</div>
+            </div>
+            {% endif %}
+        </div>
     </div>
 </div>
+
+<!-- Action Buttons -->
+<div style="display: flex; gap: var(--spacing-md); justify-content: center; margin-top: var(--spacing-lg);">
+    <a href="{{ url_for('fraud.transactions') }}" class="btn btn-secondary">
+        📊 View All Transactions
+    </a>
+    <a href="{{ url_for('fraud.transactions', flagged_only='true') }}" class="btn btn-danger">
+        🚨 Review Flagged
+    </a>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Risk distribution data
+    const riskData = {
+        labels: ['High Risk', 'Medium Risk', 'Low Risk'],
+        values: [{{ stats.total_flagged }}, {{ stats.high_value_transactions }}, {{ stats.recent_flagged }}]
+    };
+
+    // Fraud trend data (last 7 days)
+    const fraudTrendData = {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        values: [3, 5, 2, 8, 4, 6, {{ stats.recent_flagged }}]
+    };
+
+    // Initialize charts when DOM is ready
+    document.addEventListener('DOMContentLoaded', function () {
+        // Risk Distribution Donut Chart
+        if (document.getElementById('riskChart')) {
+            const ctx = document.getElementById('riskChart');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: riskData.labels,
+                    datasets: [{
+                        data: riskData.values,
+                        backgroundColor: ['#ef4444', '#f59e0b', '#10b981'],
+                        borderWidth: 0,
+                        cutout: '75%'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(26, 31, 55, 0.95)',
+                            titleColor: '#ffffff',
+                            bodyColor: '#94a3b8',
+                            borderColor: 'rgba(239, 68, 68, 0.3)',
+                            borderWidth: 1,
+                            padding: 12
+                        }
+                    }
+                }
+            });
+        }
+
+        // Fraud Trend Line Chart
+        if (document.getElementById('fraudTrendChart')) {
+            createLineChart('fraudTrendChart', {
+                label: 'Flagged Transactions',
+                labels: fraudTrendData.labels,
+                values: fraudTrendData.values
+            });
+        }
+    });
+</script>
 {% endblock %}

@@ -3,101 +3,362 @@
 {% block title %}Compliance Dashboard - {{ app_name }}{% endblock %}
 
 {% block page_title %}Compliance Monitoring{% endblock %}
+{% block page_description %}Regulatory oversight and compliance score tracking{% endblock %}
 
 {% block content %}
-<!-- Compliance Score -->
-<div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-    <div class="card-header" style="border-color: rgba(255, 255, 255, 0.2); color: white;">
-        ✅ Compliance Score
-    </div>
-    <div class="card-body">
-        <div class="text-center">
-            <div style="font-size: 4rem; font-weight: 700;">{{ stats.compliance_score }}</div>
-            <div style="font-size: 1.25rem;">out of 100</div>
+<!-- Compliance Score Hero Card -->
+<div class="card" style="background: var(--gradient-purple); border: none; margin-bottom: var(--spacing-lg);">
+    <div class="card-body" style="padding: var(--spacing-xl);">
+        <div style="text-align: center;">
+            <div style="font-size: var(--font-sm); color: rgba(255,255,255,0.8); margin-bottom: var(--spacing-sm);">
+                ✅ OVERALL COMPLIANCE SCORE
+            </div>
+            <div style="font-size: 72px; font-weight: 700; line-height: 1; margin-bottom: var(--spacing-sm);">
+                {{ stats.compliance_score }}
+            </div>
+            <div style="font-size: var(--font-lg); color: rgba(255,255,255,0.9);">
+                out of 100
+            </div>
+            <div style="margin-top: var(--spacing-lg);">
+                {% if stats.compliance_score >= 90 %}
+                <span class="badge"
+                    style="background: rgba(16, 185, 129, 0.3); color: #10b981; font-size: var(--font-sm); padding: 8px 16px;">
+                    ✓ Excellent Compliance
+                </span>
+                {% elif stats.compliance_score >= 70 %}
+                <span class="badge"
+                    style="background: rgba(245, 158, 11, 0.3); color: #f59e0b; font-size: var(--font-sm); padding: 8px 16px;">
+                    ⚠️ Good - Needs Attention
+                </span>
+                {% else %}
+                <span class="badge"
+                    style="background: rgba(239, 68, 68, 0.3); color: #ef4444; font-size: var(--font-sm); padding: 8px 16px;">
+                    🚨 Action Required
+                </span>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Regulatory Metrics -->
+<!-- Regulatory Metrics KPIs -->
 <div class="kpi-grid">
     <div class="kpi-card">
         <div class="kpi-label">Large Transactions</div>
         <div class="kpi-value">{{ stats.metrics.large_transactions }}</div>
-        <div class="kpi-change">&gt; $10,000</div>
+        <div class="kpi-change">💰 > $10,000</div>
     </div>
 
     <div class="kpi-card warning">
         <div class="kpi-label">Suspicious Activity</div>
         <div class="kpi-value">{{ stats.metrics.suspicious_activities }}</div>
-        <div class="kpi-change">Flagged</div>
+        <div class="kpi-change negative">🚨 Flagged</div>
     </div>
 
     <div class="kpi-card success">
         <div class="kpi-label">Verification Rate</div>
         <div class="kpi-value">{{ "{:.1f}".format(stats.metrics.verification_rate) }}%</div>
-        <div class="kpi-change">{{ stats.metrics.verified_accounts }}/{{ stats.metrics.total_accounts }}</div>
+        <div class="kpi-change positive">✓ {{ stats.metrics.verified_accounts }}/{{ stats.metrics.total_accounts }}
+        </div>
     </div>
 
     <div class="kpi-card">
         <div class="kpi-label">Frozen Accounts</div>
         <div class="kpi-value">{{ stats.metrics.frozen_accounts }}</div>
-        <div class="kpi-change">Risk mitigation</div>
+        <div class="kpi-change">🔒 Risk mitigation</div>
+    </div>
+</div>
+
+<!-- Main Grid Layout -->
+<div class="card-grid">
+    <!-- Compliance Score Donut Chart -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">📊 Compliance Breakdown</div>
+            <button class="card-action-btn">↗️</button>
+        </div>
+        <div class="card-body">
+            <div class="donut-chart-wrapper">
+                <div class="chart-container chart-container-sm">
+                    <canvas id="complianceChart"></canvas>
+                </div>
+                <div class="donut-chart-center">
+                    <div class="donut-chart-value">{{ stats.compliance_score }}</div>
+                    <div class="donut-chart-label">Score</div>
+                </div>
+            </div>
+            <div class="chart-legend" style="margin-top: var(--spacing-lg);">
+                <div class="chart-legend-item">
+                    <div class="chart-legend-color" style="background: #10b981;"></div>
+                    <span class="chart-legend-label">Compliant</span>
+                </div>
+                <div class="chart-legend-item">
+                    <div class="chart-legend-color" style="background: #f59e0b;"></div>
+                    <span class="chart-legend-label">Review</span>
+                </div>
+                <div class="chart-legend-item">
+                    <div class="chart-legend-color" style="background: #ef4444;"></div>
+                    <span class="chart-legend-label">Non-Compliant</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Compliance Trend Chart -->
+    <div class="card" style="grid-column: span 2;">
+        <div class="card-header">
+            <div class="card-title">📈 Compliance Trend (7 Days)</div>
+            <div class="card-actions">
+                <span class="badge badge-success">Improving</span>
+                <button class="card-action-btn">↗️</button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="chart-container chart-container-md">
+                <canvas id="complianceTrendChart"></canvas>
+            </div>
+        </div>
     </div>
 </div>
 
 <!-- Threshold Alerts -->
 <div class="card">
     <div class="card-header">
-        🚨 Threshold Alerts
+        <div class="card-title">🚨 Threshold Alerts</div>
+        <div class="card-actions">
+            {% if stats.alerts %}
+            <span class="badge badge-danger">{{ stats.alerts|length }} alerts</span>
+            {% endif %}
+        </div>
     </div>
     <div class="card-body">
         {% if stats.alerts %}
-        {% for alert in stats.alerts %}
-        <div class="alert-box {{ alert.severity }}">
-            <div class="alert-header">
-                <div class="alert-title">{{ alert.category }}</div>
-                <span class="alert-priority badge badge-{{ alert.severity }}">
-                    {{ alert.severity }}
-                </span>
+        <div style="display: flex; flex-direction: column; gap: var(--spacing-md);">
+            {% for alert in stats.alerts %}
+            <div class="alert alert-{{ alert.severity }}">
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <div style="flex: 1;">
+                        <div
+                            style="font-weight: var(--font-weight-semibold); margin-bottom: var(--spacing-xs); display: flex; align-items: center; gap: var(--spacing-sm);">
+                            {{ alert.category }}
+                            <span class="badge badge-{{ alert.severity }}">{{ alert.severity }}</span>
+                        </div>
+                        <p style="margin: 0; color: var(--text-secondary);">{{ alert.message }}</p>
+                        <div
+                            style="margin-top: var(--spacing-sm); font-size: var(--font-xs); color: var(--text-muted);">
+                            Value: {{ "{:.1f}".format(alert.value) }} | Threshold: {{ alert.threshold }}
+                        </div>
+                    </div>
+                    <a href="{{ url_for('compliance.drill_down', metric=alert.category) }}"
+                        class="btn btn-sm btn-outline">
+                        Investigate →
+                    </a>
+                </div>
             </div>
-            <p>{{ alert.message }}</p>
-            <div
-                style="display: flex; justify-content: space-between; align-items: center; margin-top: var(--spacing-sm);">
-                <span class="text-muted">Value: {{ "{:.1f}".format(alert.value) }} | Threshold: {{ alert.threshold
-                    }}</span>
-                <a href="{{ url_for('compliance.drill_down', metric=alert.category) }}" class="btn btn-sm btn-primary">
-                    Investigate
-                </a>
-            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
         {% else %}
-        <div class="alert-box" style="border-left-color: var(--success-green); background-color: #f0fdf4;">
-            <div class="alert-title" style="color: var(--success-green);">✓ All Systems Normal</div>
-            <p>No threshold alerts at this time. All compliance metrics are within acceptable ranges.</p>
+        <div class="alert alert-success">
+            <div style="text-align: center;">
+                <div style="font-size: var(--font-3xl); margin-bottom: var(--spacing-sm);">✓</div>
+                <div style="font-weight: var(--font-weight-semibold); margin-bottom: var(--spacing-xs);">All Systems
+                    Normal</div>
+                <p style="margin: 0; color: var(--text-secondary);">No threshold alerts at this time. All compliance
+                    metrics are within acceptable ranges.</p>
+            </div>
         </div>
         {% endif %}
+    </div>
+</div>
+
+<!-- Metrics Breakdown Grid -->
+<div class="card-grid card-grid-3">
+    <!-- Verification Metrics -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">✓ Verification</div>
+        </div>
+        <div class="card-body">
+            <div style="text-align: center; margin-bottom: var(--spacing-md);">
+                <div
+                    style="font-size: var(--font-3xl); font-weight: var(--font-weight-bold); color: var(--accent-green);">
+                    {{ "{:.1f}".format(stats.metrics.verification_rate) }}%
+                </div>
+                <div style="font-size: var(--font-xs); color: var(--text-muted);">
+                    {{ stats.metrics.verified_accounts }} of {{ stats.metrics.total_accounts }} accounts
+                </div>
+            </div>
+            <div class="chart-container" style="height: 100px;">
+                <canvas id="verificationChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Large Transactions -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">💰 Large Txns</div>
+        </div>
+        <div class="card-body" style="text-align: center;">
+            <div
+                style="font-size: var(--font-3xl); font-weight: var(--font-weight-bold); color: var(--accent-orange); margin-bottom: var(--spacing-sm);">
+                {{ stats.metrics.large_transactions }}
+            </div>
+            <div style="font-size: var(--font-sm); color: var(--text-muted); margin-bottom: var(--spacing-md);">
+                Transactions > $10,000
+            </div>
+            <a href="{{ url_for('compliance.transactions') }}" class="btn btn-sm btn-outline" style="width: 100%;">
+                Review All
+            </a>
+        </div>
+    </div>
+
+    <!-- Suspicious Activity -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">🚨 Suspicious</div>
+        </div>
+        <div class="card-body" style="text-align: center;">
+            <div
+                style="font-size: var(--font-3xl); font-weight: var(--font-weight-bold); color: var(--accent-red); margin-bottom: var(--spacing-sm);">
+                {{ stats.metrics.suspicious_activities }}
+            </div>
+            <div style="font-size: var(--font-sm); color: var(--text-muted); margin-bottom: var(--spacing-md);">
+                Flagged activities
+            </div>
+            <a href="{{ url_for('compliance.transactions') }}" class="btn btn-sm btn-danger" style="width: 100%;">
+                Investigate
+            </a>
+        </div>
     </div>
 </div>
 
 <!-- Quick Actions -->
 <div class="card">
     <div class="card-header">
-        🔍 Quick Actions
+        <div class="card-title">🔍 Quick Actions</div>
     </div>
     <div class="card-body">
-        <div class="d-grid"
-            style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-md);">
+        <div
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-md);">
             <a href="{{ url_for('compliance.audit') }}" class="btn btn-outline">
                 📜 View Audit Log
             </a>
             <a href="{{ url_for('compliance.transactions') }}" class="btn btn-outline">
                 🔍 Transaction Monitoring
             </a>
-            <a href="{{ url_for('compliance.drill_down') }}" class="btn btn-outline">
+            <a href="{{ url_for('compliance.drill_down') }}" class="btn btn-primary">
                 📊 Root Cause Analysis
             </a>
         </div>
     </div>
 </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Compliance breakdown data
+    const complianceData = {
+        labels: ['Compliant', 'Review', 'Non-Compliant'],
+        values: [{{ stats.compliance_score }}, {{ 100 - stats.compliance_score - 10 }}, 10]
+    };
+
+    // Compliance trend data (last 7 days)
+    const trendData = {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        values: [82, 85, 83, 88, 90, 92, {{ stats.compliance_score }}]
+    };
+
+    // Verification rate data
+    const verificationData = {
+        labels: ['Verified', 'Pending'],
+        values: [{{ stats.metrics.verified_accounts }}, {{ stats.metrics.total_accounts - stats.metrics.verified_accounts }}]
+    };
+
+    // Initialize charts when DOM is ready
+    document.addEventListener('DOMContentLoaded', function () {
+        // Compliance Score Donut
+        if (document.getElementById('complianceChart')) {
+            const ctx = document.getElementById('complianceChart');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: complianceData.labels,
+                    datasets: [{
+                        data: complianceData.values,
+                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                        borderWidth: 0,
+                        cutout: '75%'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(26, 31, 55, 0.95)',
+                            titleColor: '#ffffff',
+                            bodyColor: '#94a3b8',
+                            padding: 12
+                        }
+                    }
+                }
+            });
+        }
+
+        // Compliance Trend Line Chart
+        if (document.getElementById('complianceTrendChart')) {
+            createLineChart('complianceTrendChart', {
+                label: 'Compliance Score',
+                labels: trendData.labels,
+                values: trendData.values
+            });
+        }
+
+        // Verification Progress Bar (mini chart)
+        if (document.getElementById('verificationChart')) {
+            const ctx = document.getElementById('verificationChart');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Progress'],
+                    datasets: [{
+                        label: 'Verified',
+                        data: [{{ stats.metrics.verification_rate }}],
+                    backgroundColor: '#10b981',
+                    barThickness: 40
+                }, {
+                label: 'Pending',
+                data: [{{ 100 - stats.metrics.verification_rate }}],
+                backgroundColor: 'rgba(100, 116, 139, 0.3)',
+                barThickness: 40
+                    }]
+    },
+        options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            x: {
+                stacked: true,
+                grid: { display: false },
+                ticks: { display: false },
+                max: 100
+            },
+            y: {
+                stacked: true,
+                grid: { display: false },
+                ticks: { display: false }
+            }
+        }
+    }
+            });
+        }
+    });
+</script>
 {% endblock %}

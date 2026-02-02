@@ -3,27 +3,28 @@
 {% block title %}Financial Dashboard - {{ app_name }}{% endblock %}
 
 {% block page_title %}Financial Analytics{% endblock %}
+{% block page_description %}Real-time overview of financial performance and transaction metrics{% endblock %}
 
 {% block content %}
-<!-- KPI Summary -->
+<!-- KPI Summary Cards -->
 <div class="kpi-grid">
-    <div class="kpi-card success">
+    <div class="kpi-card">
         <div class="kpi-label">Total Transactions</div>
         <div class="kpi-value">{{ "{:,}".format(kpis.total_transactions) }}</div>
         <div class="kpi-change">All time</div>
     </div>
 
-    <div class="kpi-card">
+    <div class="kpi-card success">
         <div class="kpi-label">Total Volume</div>
         <div class="kpi-value">${{ "{:,.2f}".format(kpis.total_volume) }}</div>
-        <div class="kpi-change">Transaction value</div>
+        <div class="kpi-change positive">📈 Transaction value</div>
     </div>
 
-    <div class="kpi-card success">
+    <div class="kpi-card info">
         <div class="kpi-label">Active Accounts</div>
         <div class="kpi-value">{{ kpis.active_accounts }}</div>
-        <div class="kpi-change">{{ "{:.1f}".format((kpis.active_accounts / kpis.total_accounts * 100)) }}% of total
-        </div>
+        <div class="kpi-change">{{ "{:.1f}".format((kpis.active_accounts / kpis.total_accounts * 100) if
+            kpis.total_accounts > 0 else 0) }}% of total</div>
     </div>
 
     <div class="kpi-card">
@@ -33,29 +34,116 @@
     </div>
 </div>
 
+<!-- Main Grid Layout -->
+<div class="card-grid card-grid-2">
+    <!-- Balance Overview Card with Line Chart -->
+    <div class="card" style="grid-column: span 2;">
+        <div class="card-header">
+            <div class="card-title">
+                💳 Balance Overview
+            </div>
+            <div class="card-actions">
+                <span class="badge badge-success">+12% From last month</span>
+                <button class="card-action-btn" onclick="alert('Expand chart')">↗️</button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div style="margin-bottom: var(--spacing-md);">
+                <h2 style="font-size: var(--font-3xl); margin: 0;">${{ "{:,.2f}".format(kpis.total_volume) }}</h2>
+                <div
+                    style="display: flex; gap: var(--spacing-lg); margin-top: var(--spacing-sm); font-size: var(--font-sm); color: var(--text-secondary);">
+                    <span>📊 {{ kpis.total_transactions }} transactions</span>
+                    <span>📁 12 categories</span>
+                </div>
+            </div>
+            <div class="chart-container chart-container-md">
+                <canvas id="balanceChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Earnings Donut Chart -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">💰 Earnings</div>
+            <button class="card-action-btn">↗️</button>
+        </div>
+        <div class="card-body">
+            <div class="donut-chart-wrapper">
+                <div class="chart-container chart-container-sm">
+                    <canvas id="earningsChart"></canvas>
+                </div>
+                <div class="donut-chart-center">
+                    <div class="donut-chart-value">58%</div>
+                    <div class="donut-chart-label">Goal</div>
+                </div>
+            </div>
+            <div class="chart-legend" style="margin-top: var(--spacing-lg);">
+                <div class="chart-legend-item">
+                    <div class="chart-legend-color" style="background: #3b82f6;"></div>
+                    <span class="chart-legend-label">Current</span>
+                </div>
+                <div class="chart-legend-item">
+                    <div class="chart-legend-color" style="background: #60a5fa;"></div>
+                    <span class="chart-legend-label">Month goal</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Spending Bar Chart -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">📊 Spending</div>
+            <button class="card-action-btn">↗️</button>
+        </div>
+        <div class="card-body">
+            <h3 style="margin: 0; margin-bottom: var(--spacing-xs);">${{ "{:,.2f}".format(kpis.total_withdrawals) }}
+            </h3>
+            <div class="kpi-change negative" style="margin-bottom: var(--spacing-md);">📉 -8% From last month</div>
+            <div class="chart-container chart-container-sm">
+                <canvas id="spendingChart"></canvas>
+            </div>
+            <div style="display: flex; gap: var(--spacing-sm); margin-top: var(--spacing-md); flex-wrap: wrap;">
+                <span class="badge badge-primary">💰 Clothing</span>
+                <span class="badge badge-info">🍔 Groceries</span>
+                <span class="badge badge-success">⛽ Pets</span>
+                <span class="badge badge-warning">📱 Bills</span>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Transaction Breakdown -->
 <div class="card">
     <div class="card-header">
-        💰 Transaction Breakdown
+        <div class="card-title">💸 Transaction Breakdown</div>
     </div>
     <div class="card-body">
         <div class="kpi-grid">
-            <div>
-                <p class="text-muted mb-0">Deposits</p>
-                <h3 class="text-success">${{ "{:,.2f}".format(kpis.total_deposits) }}</h3>
+            <div
+                style="text-align: center; padding: var(--spacing-md); background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-lg);">
+                <p class="text-muted mb-0" style="font-size: var(--font-xs);">Deposits</p>
+                <h3 class="text-success" style="margin: var(--spacing-xs) 0 0;">${{
+                    "{:,.2f}".format(kpis.total_deposits) }}</h3>
             </div>
-            <div>
-                <p class="text-muted mb-0">Withdrawals</p>
-                <h3 class="text-danger">${{ "{:,.2f}".format(kpis.total_withdrawals) }}</h3>
+            <div
+                style="text-align: center; padding: var(--spacing-md); background: rgba(239, 68, 68, 0.1); border-radius: var(--radius-lg);">
+                <p class="text-muted mb-0" style="font-size: var(--font-xs);">Withdrawals</p>
+                <h3 class="text-danger" style="margin: var(--spacing-xs) 0 0;">${{
+                    "{:,.2f}".format(kpis.total_withdrawals) }}</h3>
             </div>
-            <div>
-                <p class="text-muted mb-0">Transfers</p>
-                <h3 class="text-primary">${{ "{:,.2f}".format(kpis.total_transfers) }}</h3>
+            <div
+                style="text-align: center; padding: var(--spacing-md); background: rgba(59, 130, 246, 0.1); border-radius: var(--radius-lg);">
+                <p class="text-muted mb-0" style="font-size: var(--font-xs);">Transfers</p>
+                <h3 class="text-blue" style="margin: var(--spacing-xs) 0 0;">${{ "{:,.2f}".format(kpis.total_transfers)
+                    }}</h3>
             </div>
-            <div>
-                <p class="text-muted mb-0">Net Flow</p>
-                <h3 class="{{ 'text-success' if kpis.net_flow >= 0 else 'text-danger' }}">${{
-                    "{:,.2f}".format(kpis.net_flow) }}</h3>
+            <div
+                style="text-align: center; padding: var(--spacing-md); background: rgba(59, 130, 246, 0.1); border-radius: var(--radius-lg);">
+                <p class="text-muted mb-0" style="font-size: var(--font-xs);">Net Flow</p>
+                <h3 class="{{ 'text-success' if kpis.net_flow >= 0 else 'text-danger' }}"
+                    style="margin: var(--spacing-xs) 0 0;">${{ "{:,.2f}".format(kpis.net_flow) }}</h3>
             </div>
         </div>
     </div>
@@ -64,43 +152,101 @@
 <!-- Top Transactions -->
 <div class="card">
     <div class="card-header">
-        📊 Top Transactions
+        <div class="card-title">📋 Recent Transactions</div>
+        <div class="card-actions">
+            <button class="btn btn-sm btn-secondary"
+                onclick="window.location.href='{{ url_for('transactions.history') }}'">
+                View All →
+            </button>
+        </div>
     </div>
     <div class="card-body">
         {% if top_transactions %}
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Type</th>
-                    <th>Amount</th>
-                    <th>Date</th>
-                    <th>Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for txn in top_transactions %}
-                <tr>
-                    <td>{{ txn.transaction_id[:8] }}...</td>
-                    <td><span class="badge badge-primary">{{ txn.transaction_type }}</span></td>
-                    <td class="text-primary"><strong>${{ "{:,.2f}".format(txn.amount) }}</strong></td>
-                    <td>{{ txn.timestamp }}</td>
-                    <td>{{ txn.description or '-' }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <ul class="transaction-list">
+            {% for txn in top_transactions[:5] %}
+            <li class="transaction-item">
+                <div class="transaction-info">
+                    <div class="transaction-icon">
+                        {% if txn.transaction_type == 'deposit' %}💰
+                        {% elif txn.transaction_type == 'withdrawal' %}💸
+                        {% else %}💳{% endif %}
+                    </div>
+                    <div class="transaction-details">
+                        <div class="transaction-name">{{ txn.description or txn.transaction_type.title() }}</div>
+                        <div class="transaction-meta">
+                            <span class="badge badge-primary">{{ txn.transaction_type }}</span>
+                            <span>•</span>
+                            <span>{{ txn.transaction_id[:8] }}...</span>
+                            <span>•</span>
+                            <span>{{ txn.timestamp.strftime('%b %d, %Y') if txn.timestamp.strftime else txn.timestamp
+                                }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="transaction-amount {{ 'positive' if txn.transaction_type == 'deposit' else 'negative' }}">
+                    {{ '+' if txn.transaction_type == 'deposit' else '-' }}${{ "{:,.2f}".format(txn.amount) }}
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
         {% else %}
-        <p class="text-muted text-center">No transactions found.</p>
+        <div class="chart-no-data">
+            <div class="chart-no-data-icon">📭</div>
+            <div class="chart-no-data-text">No transactions found</div>
+        </div>
         {% endif %}
     </div>
-    <div class="card-footer">
-        <a href="{{ url_for('financial.transactions') }}" class="btn btn-outline">
-            View All Transactions →
+    <div class="card-footer" style="display: flex; gap: var(--spacing-md); justify-content: flex-end;">
+        <a href="{{ url_for('financial.transactions') }}" class="btn btn-secondary btn-sm">
+            View All Transactions
         </a>
-        <a href="{{ url_for('financial.reports') }}" class="btn btn-primary">
-            Create Custom Report
+        <a href="{{ url_for('financial.reports') }}" class="btn btn-primary btn-sm">
+            📑 Create Report
         </a>
     </div>
 </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Sample data - in production, this would come from the backend
+    const transactionData = {
+        labels: ['17', '18', '19', '20', '21', '22', '23', '24'],
+        values: [45000, 52000, 49000, 58000, 62000, 59000, 65000, {{ kpis.total_volume }}]
+    };
+
+    const earningsData = {
+        labels: ['Current', 'Month Goal'],
+        values: [58, 42]
+    };
+
+    const spendingData = {
+        labels: ['Clothing', 'Groceries', 'Pets', 'Bills'],
+        values: [{{ kpis.total_withdrawals * 0.35 }}, {{ kpis.total_withdrawals * 0.25 }}, {{kpis.total_withdrawals * 0.20}}, {{kpis.total_withdrawals * 0.20}}],
+    colors: ['#3b82f6', '#22d3ee', '#10b981', '#f59e0b']
+    };
+
+    // Initialize charts when DOM is ready
+    document.addEventListener('DOMContentLoaded', function () {
+        // Balance Overview Line Chart
+        if (document.getElementById('balanceChart')) {
+            createLineChart('balanceChart', {
+                label: 'Balance',
+                labels: transactionData.labels,
+                values: transactionData.values
+            });
+        }
+
+        // Earnings Donut Chart
+        if (document.getElementById('earningsChart')) {
+            createDonutChart('earningsChart', earningsData);
+        }
+
+        // Spending Bar Chart
+        if (document.getElementById('spendingChart')) {
+            createBarChart('spendingChart', spendingData);
+        }
+    });
+</script>
 {% endblock %}
