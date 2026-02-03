@@ -11,21 +11,21 @@
    ================================================ */
 
 :root {
-    /* Background Colors */
-    --bg-primary: #0a0e27;           /* Main background - very dark navy */
-    --bg-secondary: #0d1117;         /* Secondary background - dark slate */
-    --bg-tertiary: #1a1f37;          /* Card background - dark card */
-    --bg-hover: #1f2437;             /* Hover state background */
-    --bg-active: #252b42;            /* Active state background */
+    /* Background Colors - Solid Black Theme */
+    --bg-primary: #000000;           /* Pure black background */
+    --bg-secondary: #0a0a0a;         /* Slightly lighter black */
+    --bg-tertiary: #0d1b2a;          /* Dark blue for cards */
+    --bg-hover: #1b263b;             /* Lighter blue for hover */
+    --bg-active: #0d1b2a;            /* Active state */
     
     /* Accent Colors */
-    --accent-blue: #3b82f6;          /* Primary blue */
-    --accent-blue-light: #60a5fa;    /* Light blue */
-    --accent-cyan: #22d3ee;          /* Cyan accent */
-    --accent-green: #10b981;         /* Success green */
-    --accent-orange: #f59e0b;        /* Warning orange */
-    --accent-red: #ef4444;           /* Danger red */
-    --accent-purple: #a78bfa;        /* Purple accent */
+    --accent-blue: #2323ff;          /* Neon blue/purple */
+    --accent-blue-light: #4d4dff;    /* Bright blue/purple */
+    --accent-cyan: #2323ff;          /* Neon blue */
+    --accent-green: #00ff88;         /* Neon green */
+    --accent-orange: #ff9500;        /* Neon orange */
+    --accent-red: #ff0055;           /* Neon red/pink */
+    --accent-purple: #b388ff;        /* Neon purple */
     
     /* Text Colors */
     --text-primary: #ffffff;         /* Primary text - white */
@@ -34,29 +34,31 @@
     --text-disabled: #475569;        /* Disabled text */
     
     /* Border & Divider Colors */
-    --border-primary: rgba(255, 255, 255, 0.05);  /* Subtle border */
-    --border-secondary: rgba(255, 255, 255, 0.1); /* Medium border */
-    --border-accent: rgba(59, 130, 246, 0.3);     /* Blue border */
+    --border-primary: rgba(35, 35, 255, 0.1);  /* Neon blue border */
+    --border-secondary: rgba(35, 35, 255, 0.2); /* Brighter neon border */
+    --border-accent: rgba(35, 35, 255, 0.5);    /* Strong neon border */
     
     /* Gradients */
-    --gradient-blue: linear-gradient(135deg, #3b82f6, #60a5fa);
-    --gradient-cyan: linear-gradient(135deg, #22d3ee, #3b82f6);
-    --gradient-green: linear-gradient(135deg, #10b981, #22d3ee);
-    --gradient-purple: linear-gradient(135deg, #a78bfa, #3b82f6);
-    --gradient-chart: linear-gradient(180deg, rgba(59, 130, 246, 0.3) 0%, rgba(59, 130, 246, 0) 100%);
-    --gradient-card-hover: linear-gradient(135deg, rgba(59, 130, 246, 0.1), transparent);
+    --gradient-blue: linear-gradient(135deg, #2323ff, #4d4dff);
+    --gradient-cyan: linear-gradient(135deg, #2323ff, #4d4dff);
+    --gradient-green: linear-gradient(135deg, #00ff88, #2323ff);
+    --gradient-purple: linear-gradient(135deg, #b388ff, #2323ff);
+    --gradient-chart: linear-gradient(180deg, rgba(35, 35, 255, 0.3) 0%, rgba(35, 35, 255, 0) 100%);
+    --gradient-card-hover: linear-gradient(135deg, rgba(35, 35, 255, 0.1), transparent);
     
-    /* Shadows */
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
-    --shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.5);
-    --shadow-blue: 0 8px 24px rgba(59, 130, 246, 0.2);
-    --shadow-blue-hover: 0 12px 48px rgba(59, 130, 246, 0.3);
+    /* Shadows - Neon Glow Effects */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.5);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.6);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.7);
+    --shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.8);
+    --shadow-blue: 0 0 20px rgba(35, 35, 255, 0.3), 0 0 40px rgba(35, 35, 255, 0.1);
+    --shadow-blue-hover: 0 0 30px rgba(35, 35, 255, 0.5), 0 0 60px rgba(35, 35, 255, 0.2);
+    --shadow-neon: 0 0 10px rgba(35, 35, 255, 0.4), 0 0 20px rgba(35, 35, 255, 0.3), 0 0 30px rgba(35, 35, 255, 0.2);
+    --shadow-neon-strong: 0 0 15px rgba(35, 35, 255, 0.6), 0 0 30px rgba(35, 35, 255, 0.4), 0 0 45px rgba(35, 35, 255, 0.2);
     
     /* Glassmorphism */
-    --glass-bg: rgba(26, 31, 55, 0.7);
-    --glass-border: rgba(255, 255, 255, 0.05);
+    --glass-bg: rgba(13, 27, 42, 0.7);
+    --glass-border: rgba(35, 35, 255, 0.2);
     --glass-blur: 10px;
     
     /* Typography */
@@ -420,27 +422,12 @@ small {
    THEME TOGGLE SWITCH
    ================================================ */
 
-.theme-toggle-container {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    padding: 8px 12px;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-primary);
-    border-radius: var(--radius-md);
-    transition: all var(--transition-fast);
-}
-
-.theme-toggle-container:hover {
-    background: var(--bg-hover);
-    border-color: var(--border-secondary);
-}
-
 .theme-toggle-switch {
     position: relative;
     display: inline-block;
-    width: 50px;
-    height: 26px;
+    width: 56px;
+    height: 28px;
+    cursor: pointer;
 }
 
 .theme-toggle-switch input {
@@ -457,36 +444,41 @@ small {
     right: 0;
     bottom: 0;
     background: var(--bg-hover);
-    border: 2px solid var(--border-primary);
+    border: 2px solid var(--border-secondary);
     transition: var(--transition-base);
     border-radius: var(--radius-full);
 }
 
+.theme-toggle-slider:hover {
+    border-color: var(--accent-blue);
+}
+
 .theme-toggle-slider:before {
     position: absolute;
-    content: "";
-    height: 18px;
-    width: 18px;
+    content: "🌙";
+    height: 20px;
+    width: 20px;
     left: 2px;
     bottom: 2px;
     background: var(--gradient-blue);
     transition: var(--transition-base);
     border-radius: var(--radius-full);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    line-height: 1;
 }
 
 .theme-toggle-switch input:checked + .theme-toggle-slider {
-    background: var(--bg-active);
+    background: var(--accent-blue);
     border-color: var(--accent-blue);
 }
 
 .theme-toggle-switch input:checked + .theme-toggle-slider:before {
-    transform: translateX(24px);
-}
-
-.theme-toggle-label {
-    font-size: var(--font-sm);
-    color: var(--text-secondary);
-    font-weight: var(--font-weight-medium);
-    user-select: none;
+    content: "☀️";
+    transform: translateX(28px);
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    box-shadow: 0 2px 6px rgba(251, 191, 36, 0.4);
 }

@@ -55,14 +55,11 @@
                 </div>
             </div>
             <!-- Theme Toggle Switch -->
-            <div class="theme-toggle-container" style="margin-top: var(--spacing-sm); width: 100%;">
-                <span class="theme-toggle-label" id="theme-label-left">🌙 Dark</span>
-                <label class="theme-toggle-switch">
-                    <input type="checkbox" id="themeToggle" onchange="toggleTheme()">
-                    <span class="theme-toggle-slider"></span>
-                </label>
-                <span class="theme-toggle-label" id="theme-label-right">☀️ Light</span>
-            </div>
+            <label class="theme-toggle-switch" title="Toggle Dark/Light Mode"
+                style="position: absolute; top: 16px; right: 16px;">
+                <input type="checkbox" id="themeToggle" onchange="toggleTheme()">
+                <span class="theme-toggle-slider"></span>
+            </label>
         </div>
 
         <!-- Navigation Menu -->
@@ -144,14 +141,6 @@
                 </li>
             </ul>
         </nav>
-
-        <!-- Activate Pro CTA -->
-        <div class="sidebar-cta">
-            <button class="sidebar-cta-button" onclick="alert('Pro features coming soon!')">
-                <span>⚡</span>
-                Activate Pro
-            </button>
-        </div>
     </aside>
 
     <!-- Sidebar Overlay for Mobile -->
@@ -172,15 +161,6 @@
                 <div class="topbar-filter">
                     <span>📅</span>
                     <span>This Month</span>
-                </div>
-                <div class="topbar-actions">
-                    <button class="btn btn-secondary btn-sm" onclick="alert('Widgets customization coming soon!')">
-                        ⚙️ Manage Widgets
-                    </button>
-                    <button class="btn btn-primary btn-sm"
-                        onclick="window.location.href='{{ url_for('transactions.create') }}'">
-                        + Add new Widget
-                    </button>
                 </div>
             </div>
 

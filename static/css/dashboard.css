@@ -240,19 +240,21 @@
    ================================================ */
 
 .card {
-    background: var(--glass-bg);
-    backdrop-filter: blur(var(--glass-blur));
-    -webkit-backdrop-filter: blur(var(--glass-blur));
-    border: 1px solid var(--glass-border);
+    background: rgba(13, 27, 42, 0.4);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(35, 35, 255, 0.3);
     border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--shadow-neon);
     transition: all var(--transition-base);
     overflow: hidden;
 }
 
 .card:hover {
-    border-color: var(--border-secondary);
-    box-shadow: var(--shadow-lg);
+    background: rgba(13, 27, 42, 0.6);
+    border-color: var(--accent-blue);
+    box-shadow: var(--shadow-neon-strong);
+    transform: translateY(-2px);
 }
 
 .card-header {
@@ -340,14 +342,16 @@
 }
 
 .kpi-card {
-    background: var(--glass-bg);
-    backdrop-filter: blur(var(--glass-blur));
-    border: 1px solid var(--glass-border);
+    background: rgba(13, 27, 42, 0.4);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(35, 35, 255, 0.3);
     border-radius: var(--radius-xl);
     padding: var(--spacing-lg);
     transition: all var(--transition-base);
     position: relative;
     overflow: hidden;
+    box-shadow: var(--shadow-neon);
 }
 
 .kpi-card::before {
@@ -358,18 +362,20 @@
     right: 0;
     height: 3px;
     background: var(--gradient-blue);
-    opacity: 0;
+    opacity: 0.8;
     transition: opacity var(--transition-fast);
 }
 
 .kpi-card:hover {
+    background: rgba(13, 27, 42, 0.6);
     transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
-    border-color: var(--border-secondary);
+    box-shadow: var(--shadow-neon-strong);
+    border-color: var(--accent-blue);
 }
 
 .kpi-card:hover::before {
     opacity: 1;
+    box-shadow: 0 0 15px var(--accent-blue);
 }
 
 .kpi-label {
