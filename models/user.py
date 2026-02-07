@@ -3,11 +3,11 @@ User model for authentication and user management
 Handles user creation, authentication, and Flask-Login integration
 """
 
-import sqlite3
 import uuid
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from config import Config
+from services.database_adapter import get_database_adapter
 
 class User(UserMixin):
     """User model with Flask-Login integration"""
@@ -37,27 +37,26 @@ class User(UserMixin):
         if role not in Config.ROLES:
             raise ValueError(f"Invalid role. Must be one of: {list(Config.ROLES.keys())}")
         
-        conn = sqlite3.connect(Config.DATABASE_PATH)
-        cursor = conn.cursor()
+        db = get_database_adapter()
         
-        try:
-            user_id = str(uuid.uuid4())
-            password_hash = generate_password_hash(password)
-            
-            cursor.execute('''
-                INSERT INTO users (user_id, name, email, password_hash, role)
-                VALUES (?, ?, ?, ?, ?)
-            ''', (user_id, name, email, password_hash, role))
-            
-            conn.commit()
-            
+        user_id = str(uuid.uuid4())
+        password_hash = generate_password_hash(password)
+        
+        user_data = {
+            'user_id': user_id,
+            'name': name,
+            'email': email,
+            'password_hash': password_hash,
+            'role': role
+        }
+        
+        success = db.create_user(user_data)
+        
+        if success:
             return User(user_id, name, email, role, password_hash)
-        
-        except sqlite3.IntegrityError:
+        else:
             # Email already exists
             return None
-        finally:
-            conn.close()
     
     @staticmethod
     def get_by_id(user_id):
@@ -70,20 +69,17 @@ class User(UserMixin):
         Returns:
             User object or None if not found
         """
-        conn = sqlite3.connect(Config.DATABASE_PATH)
-        cursor = conn.cursor()
+        db = get_database_adapter()
+        user_data = db.get_user(user_id)
         
-        cursor.execute('''
-            SELECT user_id, name, email, role, password_hash
-            FROM users
-            WHERE user_id = ?
-        ''', (user_id,))
-        
-        row = cursor.fetchone()
-        conn.close()
-        
-        if row:
-            return User(row[0], row[1], row[2], row[3], row[4])
+        if user_data:
+            return User(
+                user_data['user_id'],
+                user_data['name'],
+                user_data['email'],
+                user_data['role'],
+                user_data['password_hash']
+            )
         return None
     
     @staticmethod
@@ -97,20 +93,17 @@ class User(UserMixin):
         Returns:
             User object or None if not found
         """
-        conn = sqlite3.connect(Config.DATABASE_PATH)
-        cursor = conn.cursor()
+        db = get_database_adapter()
+        user_data = db.get_user_by_email(email)
         
-        cursor.execute('''
-            SELECT user_id, name, email, role, password_hash
-            FROM users
-            WHERE email = ?
-        ''', (email,))
-        
-        row = cursor.fetchone()
-        conn.close()
-        
-        if row:
-            return User(row[0], row[1], row[2], row[3], row[4])
+        if user_data:
+            return User(
+                user_data['user_id'],
+                user_data['name'],
+                user_data['email'],
+                user_data['role'],
+                user_data['password_hash']
+            )
         return None
     
     def check_password(self, password):
@@ -133,19 +126,16 @@ class User(UserMixin):
         Returns:
             List of User objects
         """
-        conn = sqlite3.connect(Config.DATABASE_PATH)
-        cursor = conn.cursor()
+        db = get_database_adapter()
+        users_data = db.get_all_users()
         
-        cursor.execute('''
-            SELECT user_id, name, email, role, password_hash
-            FROM users
-            ORDER BY created_at DESC
-        ''')
-        
-        rows = cursor.fetchall()
-        conn.close()
-        
-        return [User(row[0], row[1], row[2], row[3], row[4]) for row in rows]
+        return [User(
+            user_data['user_id'],
+            user_data['name'],
+            user_data['email'],
+            user_data['role'],
+            user_data['password_hash']
+        ) for user_data in users_data]
     
     def get_role_display(self):
         """Get display name for user role"""

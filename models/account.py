@@ -3,9 +3,9 @@ Account model for managing user bank accounts
 Handles account creation, balance updates, and status management
 """
 
-import sqlite3
 import uuid
 from config import Config
+from services.database_adapter import get_database_adapter
 
 class Account:
     """Bank account model"""
@@ -29,18 +29,18 @@ class Account:
         Returns:
             Account object
         """
-        conn = sqlite3.connect(Config.DATABASE_PATH)
-        cursor = conn.cursor()
+        db = get_database_adapter()
         
         account_id = str(uuid.uuid4())
         
-        cursor.execute('''
-            INSERT INTO accounts (account_id, user_id, balance, status)
-            VALUES (?, ?, ?, 'active')
-        ''', (account_id, user_id, initial_balance))
+        account_data = {
+            'account_id': account_id,
+            'user_id': user_id,
+            'balance': initial_balance,
+            'status': 'active'
+        }
         
-        conn.commit()
-        conn.close()
+        db.create_account(account_data)
         
         return Account(account_id, user_id, initial_balance, 'active')
     
@@ -55,20 +55,17 @@ class Account:
         Returns:
             Account object or None if not found
         """
-        conn = sqlite3.connect(Config.DATABASE_PATH)
-        cursor = conn.cursor()
+        db = get_database_adapter()
+        account_data = db.get_account(account_id)
         
-        cursor.execute('''
-            SELECT account_id, user_id, balance, status, created_at
-            FROM accounts
-            WHERE account_id = ?
-        ''', (account_id,))
-        
-        row = cursor.fetchone()
-        conn.close()
-        
-        if row:
-            return Account(row[0], row[1], row[2], row[3], row[4])
+        if account_data:
+            return Account(
+                account_data['account_id'],
+                account_data['user_id'],
+                account_data['balance'],
+                account_data['status'],
+                account_data.get('created_at')
+            )
         return None
     
     @staticmethod
@@ -82,20 +79,16 @@ class Account:
         Returns:
             List of Account objects
         """
-        conn = sqlite3.connect(Config.DATABASE_PATH)
-        cursor = conn.cursor()
+        db = get_database_adapter()
+        accounts_data = db.get_accounts_by_user(user_id)
         
-        cursor.execute('''
-            SELECT account_id, user_id, balance, status, created_at
-            FROM accounts
-            WHERE user_id = ?
-            ORDER BY created_at DESC
-        ''', (user_id,))
-        
-        rows = cursor.fetchall()
-        conn.close()
-        
-        return [Account(row[0], row[1], row[2], row[3], row[4]) for row in rows]
+        return [Account(
+            account_data['account_id'],
+            account_data['user_id'],
+            account_data['balance'],
+            account_data['status'],
+            account_data.get('created_at')
+        ) for account_data in accounts_data]
     
     @staticmethod
     def get_all():
@@ -129,20 +122,9 @@ class Account:
         Returns:
             New balance
         """
-        conn = sqlite3.connect(Config.DATABASE_PATH)
-        cursor = conn.cursor()
-        
+        db = get_database_adapter()
         new_balance = self.balance + amount
-        
-        cursor.execute('''
-            UPDATE accounts
-            SET balance = ?
-            WHERE account_id = ?
-        ''', (new_balance, self.account_id))
-        
-        conn.commit()
-        conn.close()
-        
+        db.update_account_balance(self.account_id, new_balance)
         self.balance = new_balance
         return new_balance
     

@@ -16,14 +16,23 @@ class Config:
     # SQLite Configuration (for local mode)
     DATABASE_PATH = os.getenv('DATABASE_PATH', 'database.db')
     
-    # AWS Configuration (for Phase 3+)
+    # Dual-Mode Configuration
+    USE_AWS = os.getenv('USE_AWS', 'false').lower() == 'true'
+    
+    # AWS Configuration
     AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
     AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
     AWS_REGION = os.getenv('AWS_REGION', 'us-east-1')
-    DYNAMODB_TABLE_PREFIX = os.getenv('DYNAMODB_TABLE_PREFIX', 'BankingAnalytics')
     
-    # SNS Configuration (for Phase 3+)
-    SNS_TOPIC_ARN = os.getenv('SNS_TOPIC_ARN')
+    # DynamoDB Table Names
+    DYNAMODB_USERS_TABLE = os.getenv('DYNAMODB_USERS_TABLE', 'cloudbank-users')
+    DYNAMODB_ACCOUNTS_TABLE = os.getenv('DYNAMODB_ACCOUNTS_TABLE', 'cloudbank-accounts')
+    DYNAMODB_TRANSACTIONS_TABLE = os.getenv('DYNAMODB_TRANSACTIONS_TABLE', 'cloudbank-transactions')
+    DYNAMODB_NOTIFICATIONS_TABLE = os.getenv('DYNAMODB_NOTIFICATIONS_TABLE', 'cloudbank-notifications')
+    DYNAMODB_AUDIT_LOG_TABLE = os.getenv('DYNAMODB_AUDIT_LOG_TABLE', 'cloudbank-audit-log')
+    
+
+
     
     # Session Configuration
     SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS

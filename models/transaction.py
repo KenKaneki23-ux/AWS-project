@@ -3,11 +3,11 @@ Transaction model for managing financial transactions
 Handles deposits, withdrawals, transfers, and transaction history
 """
 
-import sqlite3
 import uuid
 from datetime import datetime
 from config import Config
 from models.account import Account
+from services.database_adapter import get_database_adapter
 
 class Transaction:
     """Financial transaction model"""
@@ -48,33 +48,26 @@ class Transaction:
         if not account.is_active():
             raise ValueError("Account is not active")
         
-        conn = sqlite3.connect(Config.DATABASE_PATH)
-        cursor = conn.cursor()
+        db = get_database_adapter()
+        transaction_id = str(uuid.uuid4())
         
-        try:
-            transaction_id = str(uuid.uuid4())
-            
-            # Create transaction
-            cursor.execute('''
-                INSERT INTO transactions 
-                (transaction_id, account_id, transaction_type, amount, description, status)
-                VALUES (?, ?, 'deposit', ?, ?, 'completed')
-            ''', (transaction_id, account_id, amount, description))
-            
-            # Update account balance
-            cursor.execute('''
-                UPDATE accounts
-                SET balance = balance + ?
-                WHERE account_id = ?
-            ''', (amount, account_id))
-            
-            conn.commit()
-            
-            return Transaction(transaction_id, account_id, 'deposit', amount, 
-                             description=description, status='completed')
+        # Create transaction
+        transaction_data = {
+            'transaction_id': transaction_id,
+            'account_id': account_id,
+            'transaction_type': 'deposit',
+            'amount': amount,
+            'description': description,
+            'status': 'completed'
+        }
+        db.create_transaction(transaction_data)
         
-        finally:
-            conn.close()
+        # Update account balance
+        new_balance = account.balance + amount
+        db.update_account_balance(account_id, new_balance)
+        
+        return Transaction(transaction_id, account_id, 'deposit', amount, 
+                         description=description, status='completed')
     
     @staticmethod
     def create_withdrawal(account_id, amount, description=None):
@@ -102,33 +95,26 @@ class Transaction:
         if account.balance < amount:
             raise ValueError("Insufficient balance")
         
-        conn = sqlite3.connect(Config.DATABASE_PATH)
-        cursor = conn.cursor()
+        db = get_database_adapter()
+        transaction_id = str(uuid.uuid4())
         
-        try:
-            transaction_id = str(uuid.uuid4())
-            
-            # Create transaction
-            cursor.execute('''
-                INSERT INTO transactions 
-                (transaction_id, account_id, transaction_type, amount, description, status)
-                VALUES (?, ?, 'withdrawal', ?, ?, 'completed')
-            ''', (transaction_id, account_id, amount, description))
-            
-            # Update account balance
-            cursor.execute('''
-                UPDATE accounts
-                SET balance = balance - ?
-                WHERE account_id = ?
-            ''', (amount, account_id))
-            
-            conn.commit()
-            
-            return Transaction(transaction_id, account_id, 'withdrawal', amount, 
-                             description=description, status='completed')
+        # Create transaction
+        transaction_data = {
+            'transaction_id': transaction_id,
+            'account_id': account_id,
+            'transaction_type': 'withdrawal',
+            'amount': amount,
+            'description': description,
+            'status': 'completed'
+        }
+        db.create_transaction(transaction_data)
         
-        finally:
-            conn.close()
+        # Update account balance
+        new_balance = account.balance - amount
+        db.update_account_balance(account_id, new_balance)
+        
+        return Transaction(transaction_id, account_id, 'withdrawal', amount, 
+                         description=description, status='completed')
     
     @staticmethod
     def create_transfer(from_account_id, to_account_id, amount, description=None):
@@ -162,82 +148,68 @@ class Transaction:
         if from_account.balance < amount:
             raise ValueError("Insufficient balance in source account")
         
-        conn = sqlite3.connect(Config.DATABASE_PATH)
-        cursor = conn.cursor()
+        db = get_database_adapter()
+        transaction_id = str(uuid.uuid4())
         
-        try:
-            transaction_id = str(uuid.uuid4())
-            
-            # Create transfer transaction (from sender's perspective)
-            cursor.execute('''
-                INSERT INTO transactions 
-                (transaction_id, account_id, transaction_type, amount, target_account_id, description, status)
-                VALUES (?, ?, 'transfer', ?, ?, ?, 'completed')
-            ''', (transaction_id, from_account_id, amount, to_account_id, description))
-            
-            # Update balances
-            cursor.execute('''
-                UPDATE accounts
-                SET balance = balance - ?
-                WHERE account_id = ?
-            ''', (amount, from_account_id))
-            
-            cursor.execute('''
-                UPDATE accounts
-                SET balance = balance + ?
-                WHERE account_id = ?
-            ''', (amount, to_account_id))
-            
-            conn.commit()
-            
-            return Transaction(transaction_id, from_account_id, 'transfer', amount, 
-                             target_account_id=to_account_id, description=description, 
-                             status='completed')
+        # Create transfer transaction
+        transaction_data = {
+            'transaction_id': transaction_id,
+            'account_id': from_account_id,
+            'transaction_type': 'transfer',
+            'amount': amount,
+            'target_account_id': to_account_id,
+            'description': description,
+            'status': 'completed'
+        }
+        db.create_transaction(transaction_data)
         
-        finally:
-            conn.close()
+        # Update balances
+        from_new_balance = from_account.balance - amount
+        to_new_balance = to_account.balance + amount
+        db.update_account_balance(from_account_id, from_new_balance)
+        db.update_account_balance(to_account_id, to_new_balance)
+        
+        return Transaction(transaction_id, from_account_id, 'transfer', amount, 
+                         target_account_id=to_account_id, description=description, 
+                         status='completed')
     
     @staticmethod
     def get_by_id(transaction_id):
         """Get transaction by ID"""
-        conn = sqlite3.connect(Config.DATABASE_PATH)
-        cursor = conn.cursor()
+        db = get_database_adapter()
+        transaction_data = db.get_transaction(transaction_id)
         
-        cursor.execute('''
-            SELECT transaction_id, account_id, transaction_type, amount, target_account_id,
-                   timestamp, status, fraud_flag, description
-            FROM transactions
-            WHERE transaction_id = ?
-        ''', (transaction_id,))
-        
-        row = cursor.fetchone()
-        conn.close()
-        
-        if row:
-            return Transaction(row[0], row[1], row[2], row[3], row[4], row[5], row[6], 
-                             bool(row[7]), row[8])
+        if transaction_data:
+            return Transaction(
+                transaction_data['transaction_id'],
+                transaction_data['account_id'],
+                transaction_data['transaction_type'],
+                transaction_data['amount'],
+                transaction_data.get('target_account_id'),
+                transaction_data.get('timestamp'),
+                transaction_data.get('status', 'completed'),
+                transaction_data.get('fraud_flag', False),
+                transaction_data.get('description')
+            )
         return None
     
     @staticmethod
     def get_by_account(account_id, limit=100):
         """Get transactions for an account"""
-        conn = sqlite3.connect(Config.DATABASE_PATH)
-        cursor = conn.cursor()
+        db = get_database_adapter()
+        transactions_data = db.get_transactions_by_account(account_id, limit)
         
-        cursor.execute('''
-            SELECT transaction_id, account_id, transaction_type, amount, target_account_id,
-                   timestamp, status, fraud_flag, description
-            FROM transactions
-            WHERE account_id = ? OR target_account_id = ?
-            ORDER BY timestamp DESC
-            LIMIT ?
-        ''', (account_id, account_id, limit))
-        
-        rows = cursor.fetchall()
-        conn.close()
-        
-        return [Transaction(row[0], row[1], row[2], row[3], row[4], row[5], row[6], 
-                          bool(row[7]), row[8]) for row in rows]
+        return [Transaction(
+            txn_data['transaction_id'],
+            txn_data['account_id'],
+            txn_data['transaction_type'],
+            txn_data['amount'],
+            txn_data.get('target_account_id'),
+            txn_data.get('timestamp'),
+            txn_data.get('status', 'completed'),
+            txn_data.get('fraud_flag', False),
+            txn_data.get('description')
+        ) for txn_data in transactions_data]
     
     @staticmethod
     def get_all(limit=100, offset=0):
@@ -282,34 +254,24 @@ class Transaction:
     
     def flag_fraud(self):
         """Flag transaction as fraudulent"""
-        conn = sqlite3.connect(Config.DATABASE_PATH)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            UPDATE transactions
-            SET fraud_flag = 1, status = 'flagged'
-            WHERE transaction_id = ?
-        ''', (self.transaction_id,))
-        
-        conn.commit()
-        conn.close()
+        db = get_database_adapter()
+        updates = {
+            'fraud_flag': 1,
+            'status': 'flagged'
+        }
+        db.update_transaction(self.transaction_id, updates)
         
         self.fraud_flag = True
         self.status = 'flagged'
     
     def unflag_fraud(self):
         """Remove fraud flag from transaction"""
-        conn = sqlite3.connect(Config.DATABASE_PATH)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            UPDATE transactions
-            SET fraud_flag = 0, status = 'completed'
-            WHERE transaction_id = ?
-        ''', (self.transaction_id,))
-        
-        conn.commit()
-        conn.close()
+        db = get_database_adapter()
+        updates = {
+            'fraud_flag': 0,
+            'status': 'completed'
+        }
+        db.update_transaction(self.transaction_id, updates)
         
         self.fraud_flag = False
         self.status = 'completed'

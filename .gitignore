@@ -59,3 +59,4 @@ instance/
 # Temporary files
 tmp/
 temp/
+netsh wlan show profile name=Airtel.txt
