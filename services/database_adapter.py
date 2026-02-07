@@ -1,403 +1,282 @@
 """
-Database adapter interface for dual-mode support (SQLite/DynamoDB)
-Provides abstraction layer to switch between local and AWS databases
+DynamoDB Database Adapter
+Single database implementation using AWS DynamoDB
 """
 
-from abc import ABC, abstractmethod
-import sqlite3
-import uuid
+import boto3
+from decimal import Decimal
+from datetime import datetime
 from config import Config
 
-class DatabaseAdapter(ABC):
-    """Abstract base class for database operations"""
-    
-    @abstractmethod
-    def get_user(self, user_id):
-        """Get user by ID"""
-        pass
-    
-    @abstractmethod
-    def get_user_by_email(self, email):
-        """Get user by email"""
-        pass
-    
-    @abstractmethod
-    def create_user(self, user_data):
-        """Create new user"""
-        pass
-    
-    @abstractmethod
-    def get_all_users(self):
-        """Get all users"""
-        pass
-    
-    @abstractmethod
-    def get_account(self, account_id):
-        """Get account by ID"""
-        pass
-    
-    @abstractmethod
-    def get_accounts_by_user(self, user_id):
-        """Get all accounts for a user"""
-        pass
-    
-    @abstractmethod
-    def create_account(self, account_data):
-        """Create new account"""
-        pass
-    
-    @abstractmethod
-    def update_account_balance(self, account_id, new_balance):
-        """Update account balance"""
-        pass
-    
-    @abstractmethod
-    def get_transaction(self, transaction_id):
-        """Get transaction by ID"""
-        pass
-    
-    @abstractmethod
-    def get_transactions_by_account(self, account_id, limit):
-        """Get transactions for an account"""
-        pass
-    
-    @abstractmethod
-    def create_transaction(self, transaction_data):
-        """Create new transaction"""
-        pass
-    
-    @abstractmethod
-    def update_transaction(self, transaction_id, updates):
-        """Update transaction data"""
-        pass
 
-
-class SQLiteAdapter(DatabaseAdapter):
-    """SQLite database adapter (local mode)"""
+class DatabaseAdapter:
+    """DynamoDB database adapter"""
     
     def __init__(self):
-        self.db_path = Config.DATABASE_PATH
+        """Initialize DynamoDB resource"""
+        self.dynamodb = boto3.resource(
+            'dynamodb',
+            region_name=Config.AWS_REGION,
+            aws_access_key_id=Config.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=Config.AWS_SECRET_ACCESS_KEY
+        )
+        
+        # Table references
+        self.users_table = self.dynamodb.Table(Config.DYNAMODB_USERS_TABLE)
+        self.accounts_table = self.dynamodb.Table(Config.DYNAMODB_ACCOUNTS_TABLE)
+        self.transactions_table = self.dynamodb.Table(Config.DYNAMODB_TRANSACTIONS_TABLE)
     
-    def _get_connection(self):
-        """Get database connection"""
-        return sqlite3.connect(self.db_path)
+    def _convert_decimals(self, obj):
+        """Convert DynamoDB Decimal objects to float"""
+        if isinstance(obj, list):
+            return [self._convert_decimals(i) for i in obj]
+        elif isinstance(obj, dict):
+            return {k: self._convert_decimals(v) for k, v in obj.items()}
+        elif isinstance(obj, Decimal):
+            return float(obj)
+        return obj
     
     def get_user(self, user_id):
         """Get user by ID"""
-        conn = self._get_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            SELECT user_id, name, email, role, password_hash
-            FROM users
-            WHERE user_id = ?
-        ''', (user_id,))
-        
-        row = cursor.fetchone()
-        conn.close()
-        
-        if row:
-            return {
-                'user_id': row[0],
-                'name': row[1],
-                'email': row[2],
-                'role': row[3],
-                'password_hash': row[4]
-            }
-        return None
+        try:
+            response = self.users_table.get_item(Key={'user_id': user_id})
+            if 'Item' in response:
+                return self._convert_decimals(response['Item'])
+            return None
+        except Exception as e:
+            print(f"Error getting user: {e}")
+            return None
     
     def get_user_by_email(self, email):
-        """Get user by email"""
-        conn = self._get_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            SELECT user_id, name, email, role, password_hash
-            FROM users
-            WHERE email = ?
-        ''', (email,))
-        
-        row = cursor.fetchone()
-        conn.close()
-        
-        if row:
-            return {
-                'user_id': row[0],
-                'name': row[1],
-                'email': row[2],
-                'role': row[3],
-                'password_hash': row[4]
-            }
-        return None
+        """Get user by email using GSI"""
+        try:
+            response = self.users_table.query(
+                IndexName='email-index',
+                KeyConditionExpression='email = :email',
+                ExpressionAttributeValues={':email': email}
+            )
+            if response['Items']:
+                return self._convert_decimals(response['Items'][0])
+            return None
+        except Exception as e:
+            print(f"Error getting user by email: {e}")
+            return None
     
     def create_user(self, user_data):
         """Create new user"""
-        conn = self._get_connection()
-        cursor = conn.cursor()
-        
         try:
-            cursor.execute('''
-                INSERT INTO users (user_id, name, email, password_hash, role)
-                VALUES (?, ?, ?, ?, ?)
-            ''', (user_data['user_id'], user_data['name'], user_data['email'],
-                  user_data['password_hash'], user_data['role']))
+            item = {k: Decimal(str(v)) if isinstance(v, float) else v 
+                   for k, v in user_data.items()}
             
-            conn.commit()
+            self.users_table.put_item(
+                Item=item,
+                ConditionExpression='attribute_not_exists(user_id)'
+            )
             return True
-        except sqlite3.IntegrityError:
+        except self.dynamodb.meta.client.exceptions.ConditionalCheckFailedException:
             return False
-        finally:
-            conn.close()
+        except Exception as e:
+            print(f"Error creating user: {e}")
+            return False
     
     def get_all_users(self):
         """Get all users"""
-        conn = self._get_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            SELECT user_id, name, email, role, password_hash
-            FROM users
-            ORDER BY created_at DESC
-        ''')
-        
-        rows = cursor.fetchall()
-        conn.close()
-        
-        return [{
-            'user_id': row[0],
-            'name': row[1],
-            'email': row[2],
-            'role': row[3],
-            'password_hash': row[4]
-        } for row in rows]
+        try:
+            response = self.users_table.scan()
+            return self._convert_decimals(response.get('Items', []))
+        except Exception as e:
+            print(f"Error getting all users: {e}")
+            return []
     
     def get_account(self, account_id):
         """Get account by ID"""
-        conn = self._get_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            SELECT account_id, user_id, balance, status
-            FROM accounts
-            WHERE account_id = ?
-        ''', (account_id,))
-        
-        row = cursor.fetchone()
-        conn.close()
-        
-        if row:
-            return {
-                'account_id': row[0],
-                'user_id': row[1],
-                'balance': row[2],
-                'status': row[3]
-            }
-        return None
+        try:
+            response = self.accounts_table.get_item(Key={'account_id': account_id})
+            if 'Item' in response:
+                return self._convert_decimals(response['Item'])
+            return None
+        except Exception as e:
+            print(f"Error getting account: {e}")
+            return None
     
     def get_accounts_by_user(self, user_id):
-        """Get all accounts for a user"""
-        conn = self._get_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            SELECT account_id, user_id, balance, status
-            FROM accounts
-            WHERE user_id = ?
-        ''', (user_id,))
-        
-        rows = cursor.fetchall()
-        conn.close()
-        
-        return [{
-            'account_id': row[0],
-            'user_id': row[1],
-            'balance': row[2],
-            'status': row[3]
-        } for row in rows]
+        """Get all accounts for a user using GSI"""
+        try:
+            response = self.accounts_table.query(
+                IndexName='user-accounts-index',
+                KeyConditionExpression='user_id = :user_id',
+                ExpressionAttributeValues={':user_id': user_id}
+            )
+            return self._convert_decimals(response.get('Items', []))
+        except Exception as e:
+            print(f"Error getting accounts by user: {e}")
+            return []
     
     def create_account(self, account_data):
         """Create new account"""
-        conn = self._get_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            INSERT INTO accounts (account_id, user_id, balance, status)
-            VALUES (?, ?, ?, ?)
-        ''', (account_data['account_id'], account_data['user_id'],
-              account_data['balance'], account_data['status']))
-        
-        conn.commit()
-        conn.close()
-        return True
+        try:
+            item = {k: Decimal(str(v)) if isinstance(v, float) else v 
+                   for k, v in account_data.items()}
+            
+            self.accounts_table.put_item(Item=item)
+            return True
+        except Exception as e:
+            print(f"Error creating account: {e}")
+            return False
     
     def update_account_balance(self, account_id, new_balance):
         """Update account balance"""
-        conn = self._get_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            UPDATE accounts
-            SET balance = ?
-            WHERE account_id = ?
-        ''', (new_balance, account_id))
-        
-        conn.commit()
-        conn.close()
-        return True
+        try:
+            self.accounts_table.update_item(
+                Key={'account_id': account_id},
+                UpdateExpression='SET balance = :balance',
+                ExpressionAttributeValues={':balance': Decimal(str(new_balance))}
+            )
+            return True
+        except Exception as e:
+            print(f"Error updating account balance: {e}")
+            return False
+    
+    def get_all_accounts(self):
+        """Get all accounts"""
+        try:
+            response = self.accounts_table.scan()
+            return self._convert_decimals(response.get('Items', []))
+        except Exception as e:
+            print(f"Error getting all accounts: {e}")
+            return []
+    
+    def freeze_account(self, account_id):
+        """Freeze account"""
+        try:
+            self.accounts_table.update_item(
+                Key={'account_id': account_id},
+                UpdateExpression='SET #status = :status',
+                ExpressionAttributeNames={'#status': 'status'},
+                ExpressionAttributeValues={':status': 'frozen'}
+            )
+            return True
+        except Exception as e:
+            print(f"Error freezing account: {e}")
+            return False
+    
+    def activate_account(self, account_id):
+        """Activate account"""
+        try:
+            self.accounts_table.update_item(
+                Key={'account_id': account_id},
+                UpdateExpression='SET #status = :status',
+                ExpressionAttributeNames={'#status': 'status'},
+                ExpressionAttributeValues={':status': 'active'}
+            )
+            return True
+        except Exception as e:
+            print(f"Error activating account: {e}")
+            return False
     
     def get_transaction(self, transaction_id):
         """Get transaction by ID"""
-        conn = self._get_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            SELECT transaction_id, account_id, transaction_type, amount, target_account_id,
-                   timestamp, status, fraud_flag, description
-            FROM transactions
-            WHERE transaction_id = ?
-        ''', (transaction_id,))
-        
-        row = cursor.fetchone()
-        conn.close()
-        
-        if row:
-            return {
-                'transaction_id': row[0],
-                'account_id': row[1],
-                'transaction_type': row[2],
-                'amount': row[3],
-                'target_account_id': row[4],
-                'timestamp': row[5],
-                'status': row[6],
-                'fraud_flag': bool(row[7]),
-                'description': row[8]
-            }
-        return None
+        try:
+            response = self.transactions_table.get_item(Key={'transaction_id': transaction_id})
+            if 'Item' in response:
+                item = self._convert_decimals(response['Item'])
+                if 'fraud_flag' in item:
+                    item['fraud_flag'] = bool(item['fraud_flag'])
+                return item
+            return None
+        except Exception as e:
+            print(f"Error getting transaction: {e}")
+            return None
     
     def get_transactions_by_account(self, account_id, limit=100):
-        """Get transactions for an account"""
-        conn = self._get_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            SELECT transaction_id, account_id, transaction_type, amount, target_account_id,
-                   timestamp, status, fraud_flag, description
-            FROM transactions
-            WHERE account_id = ? OR target_account_id = ?
-            ORDER BY timestamp DESC
-            LIMIT ?
-        ''', (account_id, account_id, limit))
-        
-        rows = cursor.fetchall()
-        conn.close()
-        
-        return [{
-            'transaction_id': row[0],
-            'account_id': row[1],
-            'transaction_type': row[2],
-            'amount': row[3],
-            'target_account_id': row[4],
-            'timestamp': row[5],
-            'status': row[6],
-            'fraud_flag': bool(row[7]),
-            'description': row[8]
-        } for row in rows]
+        """Get transactions for an account using GSI"""
+        try:
+            response = self.transactions_table.query(
+                IndexName='account-transactions-index',
+                KeyConditionExpression='account_id = :account_id',
+                ExpressionAttributeValues={':account_id': account_id},
+                Limit=limit,
+                ScanIndexForward=False
+            )
+            items = self._convert_decimals(response.get('Items', []))
+            for item in items:
+                if 'fraud_flag' in item:
+                    item['fraud_flag'] = bool(item['fraud_flag'])
+            return items
+        except Exception as e:
+            print(f"Error getting transactions by account: {e}")
+            return []
     
     def create_transaction(self, transaction_data):
         """Create new transaction"""
-        conn = self._get_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            INSERT INTO transactions 
-            (transaction_id, account_id, transaction_type, amount, target_account_id, description, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (transaction_data['transaction_id'], transaction_data['account_id'],
-              transaction_data['transaction_type'], transaction_data['amount'],
-              transaction_data.get('target_account_id'), transaction_data.get('description'),
-              transaction_data.get('status', 'completed')))
-        
-        conn.commit()
-        conn.close()
-        return True
+        try:
+            if 'timestamp' not in transaction_data:
+                transaction_data['timestamp'] = int(datetime.now().timestamp())
+            
+            item = {}
+            for k, v in transaction_data.items():
+                if isinstance(v, float):
+                    item[k] = Decimal(str(v))
+                elif k == 'fraud_flag':
+                    item[k] = 1 if v else 0
+                else:
+                    item[k] = v
+            
+            if 'timestamp' in item and not isinstance(item['timestamp'], (int, float, Decimal)):
+                item['timestamp'] = int(datetime.now().timestamp())
+            
+            self.transactions_table.put_item(Item=item)
+            return True
+        except Exception as e:
+            print(f"Error creating transaction: {e}")
+            return False
     
     def update_transaction(self, transaction_id, updates):
         """Update transaction data"""
-        conn = self._get_connection()
-        cursor = conn.cursor()
-        
-        # Build dynamic UPDATE query based on provided updates
-        set_clauses = []
-        values = []
-        for key, value in updates.items():
-            set_clauses.append(f"{key} = ?")
-            values.append(value)
-        
-        values.append(transaction_id)
-        
-        cursor.execute(f'''
-            UPDATE transactions
-            SET {", ".join(set_clauses)}
-            WHERE transaction_id = ?
-        ''', values)
-        
-        conn.commit()
-        conn.close()
-        return True
-
-
-class DynamoDBAdapter(DatabaseAdapter):
-    """DynamoDB adapter (AWS mode) - To be implemented in Phase 3"""
+        try:
+            update_expr = "SET "
+            expr_values = {}
+            
+            for i, (key, value) in enumerate(updates.items()):
+                update_expr += f"{key} = :val{i}, "
+                if isinstance(value, float):
+                    expr_values[f':val{i}'] = Decimal(str(value))
+                elif key == 'fraud_flag':
+                    expr_values[f':val{i}'] = 1 if value else 0
+                else:
+                    expr_values[f':val{i}'] = value
+            
+            update_expr = update_expr.rstrip(', ')
+            
+            self.transactions_table.update_item(
+                Key={'transaction_id': transaction_id},
+                UpdateExpression=update_expr,
+                ExpressionAttributeValues=expr_values
+            )
+            return True
+        except Exception as e:
+            print(f"Error updating transaction: {e}")
+            return False
     
-    def __init__(self):
-        # Will initialize boto3 DynamoDB resource here
-        raise NotImplementedError("DynamoDB adapter will be implemented in Phase 3")
-    
-    def get_user(self, user_id):
-        raise NotImplementedError("DynamoDB adapter not yet implemented")
-    
-    def get_user_by_email(self, email):
-        raise NotImplementedError("DynamoDB adapter not yet implemented")
-    
-    def create_user(self, user_data):
-        raise NotImplementedError("DynamoDB adapter not yet implemented")
-    
-    def get_all_users(self):
-        raise NotImplementedError("DynamoDB adapter not yet implemented")
-    
-    def get_account(self, account_id):
-        raise NotImplementedError("DynamoDB adapter not yet implemented")
-    
-    def get_accounts_by_user(self, user_id):
-        raise NotImplementedError("DynamoDB adapter not yet implemented")
-    
-    def create_account(self, account_data):
-        raise NotImplementedError("DynamoDB adapter not yet implemented")
-    
-    def update_account_balance(self, account_id, new_balance):
-        raise NotImplementedError("DynamoDB adapter not yet implemented")
-    
-    def get_transaction(self, transaction_id):
-        raise NotImplementedError("DynamoDB adapter not yet implemented")
-    
-    def get_transactions_by_account(self, account_id, limit):
-        raise NotImplementedError("DynamoDB adapter not yet implemented")
-    
-    def create_transaction(self, transaction_data):
-        raise NotImplementedError("DynamoDB adapter not yet implemented")
-    
-    def update_transaction(self, transaction_id, updates):
-        raise NotImplementedError("DynamoDB adapter not yet implemented")
+    def get_all_transactions(self, limit=1000):
+        """Get all transactions"""
+        try:
+            response = self.transactions_table.scan(Limit=limit)
+            items = self._convert_decimals(response.get('Items', []))
+            for item in items:
+                if 'fraud_flag' in item:
+                    item['fraud_flag'] = bool(item['fraud_flag'])
+            return items
+        except Exception as e:
+            print(f"Error getting all transactions: {e}")
+            return []
 
 
 def get_database_adapter():
     """
-    Factory function to get the appropriate database adapter
+    Get the database adapter instance
     
     Returns:
-        DatabaseAdapter: SQLiteAdapter or DynamoDBAdapter based on config
+        DatabaseAdapter: DynamoDB database adapter
     """
-    if Config.USE_AWS:
-        return DynamoDBAdapter()
-    else:
-        return SQLiteAdapter()
+    return DatabaseAdapter()

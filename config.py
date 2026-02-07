@@ -5,19 +5,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
-    """Base configuration"""
+    """AWS DynamoDB Configuration"""
+    
     # Flask
     SECRET_KEY = os.getenv('FLASK_SECRET_KEY', 'dev-secret-key-change-in-production')
     FLASK_ENV = os.getenv('FLASK_ENV', 'development')
-    
-    # Database Mode
-    DB_MODE = os.getenv('DB_MODE', 'local')  # 'local' or 'aws'
-    
-    # SQLite Configuration (for local mode)
-    DATABASE_PATH = os.getenv('DATABASE_PATH', 'database.db')
-    
-    # Dual-Mode Configuration
-    USE_AWS = os.getenv('USE_AWS', 'false').lower() == 'true'
     
     # AWS Configuration
     AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
