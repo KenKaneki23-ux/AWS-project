@@ -46,7 +46,7 @@
     <div class="kpi-card">
         <div class="kpi-label">Large Transactions</div>
         <div class="kpi-value">{{ stats.metrics.large_transactions }}</div>
-        <div class="kpi-change">💰 > $10,000</div>
+        <div class="kpi-change">💰 > ₹10,000</div>
     </div>
 
     <div class="kpi-card warning">
@@ -205,7 +205,7 @@
                 {{ stats.metrics.large_transactions }}
             </div>
             <div style="font-size: var(--font-sm); color: var(--text-muted); margin-bottom: var(--spacing-md);">
-                Transactions > $10,000
+                Transactions > ₹10,000
             </div>
             <a href="{{ url_for('compliance.transactions') }}" class="btn btn-sm btn-outline" style="width: 100%;">
                 Review All

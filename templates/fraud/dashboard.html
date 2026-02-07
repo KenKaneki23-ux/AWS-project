@@ -29,7 +29,7 @@
     <div class="kpi-card warning">
         <div class="kpi-label">High-Value Txns</div>
         <div class="kpi-value">{{ stats.high_value_transactions }}</div>
-        <div class="kpi-change">💰 > $10,000</div>
+        <div class="kpi-change">💰 > ₹10,000</div>
     </div>
 </div>
 
@@ -125,7 +125,7 @@
                 </div>
                 <div style="display: flex; align-items: center; gap: var(--spacing-md);">
                     <div class="transaction-amount negative">
-                        ${{ "{:,.2f}".format(txn.amount) }}
+                        ₹{{ "{:,.2f}".format(txn.amount) }}
                     </div>
                     <a href="{{ url_for('fraud.transaction_detail', transaction_id=txn.transaction_id) }}"
                         class="btn btn-sm btn-outline">
@@ -173,7 +173,7 @@
                         {% for alert in recent_alerts %}
                         <tr>
                             <td>{{ alert.transaction_id[:12] }}...</td>
-                            <td class="text-primary"><strong>${{ "{:,.2f}".format(alert.amount) }}</strong></td>
+                            <td class="text-primary"><strong>₹{{ "{:,.2f}".format(alert.amount) }}</strong></td>
                             <td>{{ alert.timestamp.strftime('%H:%M:%S') if alert.timestamp.strftime else alert.timestamp
                                 }}</td>
                             <td><span class="badge badge-danger">Alert</span></td>

@@ -16,7 +16,7 @@
 
     <div class="kpi-card success">
         <div class="kpi-label">Total Volume</div>
-        <div class="kpi-value">${{ "{:,.2f}".format(kpis.total_volume) }}</div>
+        <div class="kpi-value">₹{{ "{:,.2f}".format(kpis.total_volume) }}</div>
         <div class="kpi-change positive">📈 Transaction value</div>
     </div>
 
@@ -29,7 +29,7 @@
 
     <div class="kpi-card">
         <div class="kpi-label">Avg. Balance</div>
-        <div class="kpi-value">${{ "{:,.2f}".format(kpis.avg_balance) }}</div>
+        <div class="kpi-value">₹{{ "{:,.2f}".format(kpis.avg_balance) }}</div>
         <div class="kpi-change">Per active account</div>
     </div>
 </div>
@@ -49,7 +49,7 @@
         </div>
         <div class="card-body">
             <div style="margin-bottom: var(--spacing-md);">
-                <h2 style="font-size: var(--font-3xl); margin: 0;">${{ "{:,.2f}".format(kpis.total_volume) }}</h2>
+                <h2 style="font-size: var(--font-3xl); margin: 0;">₹{{ "{:,.2f}".format(kpis.total_volume) }}</h2>
                 <div
                     style="display: flex; gap: var(--spacing-lg); margin-top: var(--spacing-sm); font-size: var(--font-sm); color: var(--text-secondary);">
                     <span>📊 {{ kpis.total_transactions }} transactions</span>
@@ -98,7 +98,7 @@
             <button class="card-action-btn">↗️</button>
         </div>
         <div class="card-body">
-            <h3 style="margin: 0; margin-bottom: var(--spacing-xs);">${{ "{:,.2f}".format(kpis.total_withdrawals) }}
+            <h3 style="margin: 0; margin-bottom: var(--spacing-xs);">₹{{ "{:,.2f}".format(kpis.total_withdrawals) }}
             </h3>
             <div class="kpi-change negative" style="margin-bottom: var(--spacing-md);">📉 -8% From last month</div>
             <div class="chart-container chart-container-sm">
@@ -124,26 +124,26 @@
             <div
                 style="text-align: center; padding: var(--spacing-md); background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-lg);">
                 <p class="text-muted mb-0" style="font-size: var(--font-xs);">Deposits</p>
-                <h3 class="text-success" style="margin: var(--spacing-xs) 0 0;">${{
+                <h3 class="text-success" style="margin: var(--spacing-xs) 0 0;">₹{{
                     "{:,.2f}".format(kpis.total_deposits) }}</h3>
             </div>
             <div
                 style="text-align: center; padding: var(--spacing-md); background: rgba(239, 68, 68, 0.1); border-radius: var(--radius-lg);">
                 <p class="text-muted mb-0" style="font-size: var(--font-xs);">Withdrawals</p>
-                <h3 class="text-danger" style="margin: var(--spacing-xs) 0 0;">${{
+                <h3 class="text-danger" style="margin: var(--spacing-xs) 0 0;">₹{{
                     "{:,.2f}".format(kpis.total_withdrawals) }}</h3>
             </div>
             <div
                 style="text-align: center; padding: var(--spacing-md); background: rgba(59, 130, 246, 0.1); border-radius: var(--radius-lg);">
                 <p class="text-muted mb-0" style="font-size: var(--font-xs);">Transfers</p>
-                <h3 class="text-blue" style="margin: var(--spacing-xs) 0 0;">${{ "{:,.2f}".format(kpis.total_transfers)
+                <h3 class="text-blue" style="margin: var(--spacing-xs) 0 0;">₹{{ "{:,.2f}".format(kpis.total_transfers)
                     }}</h3>
             </div>
             <div
                 style="text-align: center; padding: var(--spacing-md); background: rgba(59, 130, 246, 0.1); border-radius: var(--radius-lg);">
                 <p class="text-muted mb-0" style="font-size: var(--font-xs);">Net Flow</p>
                 <h3 class="{{ 'text-success' if kpis.net_flow >= 0 else 'text-danger' }}"
-                    style="margin: var(--spacing-xs) 0 0;">${{ "{:,.2f}".format(kpis.net_flow) }}</h3>
+                    style="margin: var(--spacing-xs) 0 0;">₹{{ "{:,.2f}".format(kpis.net_flow) }}</h3>
             </div>
         </div>
     </div>
@@ -184,7 +184,7 @@
                     </div>
                 </div>
                 <div class="transaction-amount {{ 'positive' if txn.transaction_type == 'deposit' else 'negative' }}">
-                    {{ '+' if txn.transaction_type == 'deposit' else '-' }}${{ "{:,.2f}".format(txn.amount) }}
+                    {{ '+' if txn.transaction_type == 'deposit' else '-' }}₹{{ "{:,.2f}".format(txn.amount) }}
                 </div>
             </li>
             {% endfor %}

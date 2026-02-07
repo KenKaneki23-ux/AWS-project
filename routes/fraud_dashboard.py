@@ -69,6 +69,34 @@ def transaction_detail(transaction_id):
                            account=account,
                            risk_score=risk_score)
 
+@fraud_bp.route('/transaction/<transaction_id>/flag', methods=['POST'])
+@role_required('FRAUD_ANALYST')
+def flag_transaction(transaction_id):
+    """Flag a transaction as fraudulent"""
+    transaction = Transaction.get_by_id(transaction_id)
+    
+    if not transaction:
+        flash('Transaction not found.', 'danger')
+        return redirect(url_for('fraud.dashboard'))
+    
+    transaction.flag_fraud()
+    flash(f'Transaction {transaction_id[:8]}... has been flagged as fraudulent.', 'warning')
+    return redirect(url_for('fraud.transaction_detail', transaction_id=transaction_id))
+
+@fraud_bp.route('/transaction/<transaction_id>/unflag', methods=['POST'])
+@role_required('FRAUD_ANALYST')
+def unflag_transaction(transaction_id):
+    """Remove fraud flag from a transaction"""
+    transaction = Transaction.get_by_id(transaction_id)
+    
+    if not transaction:
+        flash('Transaction not found.', 'danger')
+        return redirect(url_for('fraud.dashboard'))
+    
+    transaction.unflag_fraud()
+    flash(f'Fraud flag removed from transaction {transaction_id[:8]}...', 'success')
+    return redirect(url_for('fraud.transaction_detail', transaction_id=transaction_id))
+
 @fraud_bp.route('/account/<account_id>/risk')
 @role_required('FRAUD_ANALYST')
 def account_risk(account_id):

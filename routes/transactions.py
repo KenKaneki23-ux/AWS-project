@@ -29,16 +29,16 @@ def create():
         try:
             if transaction_type == 'deposit':
                 Transaction.create_deposit(account_id, amount, description)
-                flash(f'Deposit of ${amount:,.2f} successful!', 'success')
+                flash(f'Deposit of ₹{amount:,.2f} successful!', 'success')
             
             elif transaction_type == 'withdrawal':
                 Transaction.create_withdrawal(account_id, amount, description)
-                flash(f'Withdrawal of ${amount:,.2f} successful!', 'success')
+                flash(f'Withdrawal of ₹{amount:,.2f} successful!', 'success')
             
             elif transaction_type == 'transfer':
                 target_account_id = request.form.get('target_account_id')
                 Transaction.create_transfer(account_id, target_account_id, amount, description)
-                flash(f'Transfer of ${amount:,.2f} successful!', 'success')
+                flash(f'Transfer of ₹{amount:,.2f} successful!', 'success')
             
             return redirect(url_for('transactions.history'))
         
@@ -145,7 +145,7 @@ def export():
             txn.transaction_id,
             txn.account_id,
             txn.transaction_type,
-            f'${txn.amount:,.2f}',
+            f'₹{txn.amount:,.2f}',
             txn.timestamp,
             txn.status,
             txn.description or ''

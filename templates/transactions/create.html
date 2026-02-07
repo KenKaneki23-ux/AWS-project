@@ -27,7 +27,7 @@
                     <option value="">Select account</option>
                     {% for account in accounts %}
                     <option value="{{ account.account_id }}">
-                        {{ account.account_id[:8] }}... - Balance: ${{ "{:,.2f}".format(account.balance) }}
+                        {{ account.account_id[:8] }}... - Balance: ₹{{ "{:,.2f}".format(account.balance) }}
                     </option>
                     {% endfor %}
                 </select>
@@ -39,7 +39,7 @@
                     <option value="">Select target account</option>
                     {% for account in all_accounts %}
                     <option value="{{ account.account_id }}">
-                        {{ account.account_id[:8] }}... - ${{ "{:,.2f}".format(account.balance) }}
+                        {{ account.account_id[:8] }}... - ₹{{ "{:,.2f}".format(account.balance) }}
                     </option>
                     {% endfor %}
                 </select>

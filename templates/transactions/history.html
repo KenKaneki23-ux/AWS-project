@@ -58,7 +58,7 @@
                         </span>
                     </td>
                     <td class="{{ 'text-success' if txn.transaction_type == 'deposit' else 'text-primary' }}">
-                        <strong>${{ "{:,.2f}".format(txn.amount) }}</strong>
+                        <strong>₹{{ "{:,.2f}".format(txn.amount) }}</strong>
                     </td>
                     <td>{{ txn.timestamp }}</td>
                     <td>

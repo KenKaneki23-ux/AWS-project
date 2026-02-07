@@ -240,21 +240,34 @@
    ================================================ */
 
 .card {
-    background: rgba(13, 27, 42, 0.4);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(35, 35, 255, 0.3);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-primary);
     border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-neon);
+    box-shadow: var(--shadow-md);
     transition: all var(--transition-base);
     overflow: hidden;
 }
 
 .card:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent-blue);
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+/* Dark Mode: Glassmorphic Neon Effect */
+[data-theme="dark"] .card {
+    background: rgba(13, 27, 42, 0.4);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(35, 35, 255, 0.3);
+    box-shadow: var(--shadow-neon);
+}
+
+[data-theme="dark"] .card:hover {
     background: rgba(13, 27, 42, 0.6);
     border-color: var(--accent-blue);
     box-shadow: var(--shadow-neon-strong);
-    transform: translateY(-2px);
 }
 
 .card-header {
@@ -342,16 +355,14 @@
 }
 
 .kpi-card {
-    background: rgba(13, 27, 42, 0.4);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(35, 35, 255, 0.3);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-primary);
     border-radius: var(--radius-xl);
     padding: var(--spacing-lg);
     transition: all var(--transition-base);
     position: relative;
     overflow: hidden;
-    box-shadow: var(--shadow-neon);
+    box-shadow: var(--shadow-md);
 }
 
 .kpi-card::before {
@@ -367,15 +378,29 @@
 }
 
 .kpi-card:hover {
-    background: rgba(13, 27, 42, 0.6);
+    background: var(--bg-hover);
     transform: translateY(-4px);
-    box-shadow: var(--shadow-neon-strong);
+    box-shadow: var(--shadow-lg);
     border-color: var(--accent-blue);
 }
 
 .kpi-card:hover::before {
     opacity: 1;
     box-shadow: 0 0 15px var(--accent-blue);
+}
+
+/* Dark Mode: Glassmorphic Neon Effect for KPI Cards */
+[data-theme="dark"] .kpi-card {
+    background: rgba(13, 27, 42, 0.4);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(35, 35, 255, 0.3);
+    box-shadow: var(--shadow-neon);
+}
+
+[data-theme="dark"] .kpi-card:hover {
+    background: rgba(13, 27, 42, 0.6);
+    box-shadow: var(--shadow-neon-strong);
 }
 
 .kpi-label {

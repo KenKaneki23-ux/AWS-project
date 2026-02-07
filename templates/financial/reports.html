@@ -58,11 +58,11 @@
             </div>
             <div class="kpi-card success">
                 <div class="kpi-label">Total Volume</div>
-                <div class="kpi-value">${{ "{:,.2f}".format(report.total_volume) }}</div>
+                <div class="kpi-value">₹{{ "{:,.2f}".format(report.total_volume) }}</div>
             </div>
             <div class="kpi-card">
                 <div class="kpi-label">Average Amount</div>
-                <div class="kpi-value">${{ "{:,.2f}".format(report.avg_amount) }}</div>
+                <div class="kpi-value">₹{{ "{:,.2f}".format(report.avg_amount) }}</div>
             </div>
         </div>
 
@@ -80,7 +80,7 @@
                 <tr>
                     <td>{{ txn.transaction_id[:8] }}...</td>
                     <td><span class="badge badge-primary">{{ txn.transaction_type }}</span></td>
-                    <td class="text-primary"><strong>${{ "{:,.2f}".format(txn.amount) }}</strong></td>
+                    <td class="text-primary"><strong>₹{{ "{:,.2f}".format(txn.amount) }}</strong></td>
                     <td>{{ txn.timestamp }}</td>
                 </tr>
                 {% endfor %}

@@ -47,7 +47,7 @@ A production-ready, cloud-based banking analytics platform built with Flask and 
 
 ```
 d:/AWS project/
-├── app.py                      # Flask application entry point
+├── app_aws.py                  # Flask application entry point
 ├── config.py                   # Configuration management
 ├── requirements.txt            # Python dependencies
 ├── database.db                 # SQLite database
@@ -111,7 +111,7 @@ d:/AWS project/
 
 ### Development Server
 ```bash
-python app.py
+python app_aws.py
 ```
 
 Visit [http://localhost:5000](http://localhost:5000)
@@ -241,7 +241,7 @@ python scripts/seed_data.py
 
 ### Port Already in Use
 ```bash
-# Change port in app.py or kill process using port 5000
+# Change port in app_aws.py or kill process using port 5000
 # Windows
 netstat -ano | findstr :5000
 taskkill /PID <PID> /F

@@ -69,7 +69,7 @@ def seed_data():
             initial_balance = round(random.uniform(1000, 50000), 2)
             account = Account.create(user.user_id, initial_balance)
             accounts.append(account)
-            print(f"✅ Created account {account.account_id[:8]}... for {user.name} with balance ${initial_balance:,.2f}")
+            print(f"✅ Created account {account.account_id[:8]}... for {user.name} with balance ₹{initial_balance:,.2f}")
     
     # Create sample transactions
     print("\n💰 Creating transactions...")
@@ -165,7 +165,7 @@ def seed_data():
     print(f"  • Compliance Officer: compliance@test.com / test123")
     print(f"  • Regular Users:      user1@test.com to user7@test.com / test123")
     
-    print(f"\n✨ Next step: Run 'python app.py' to start the application")
+    print(f"\n✨ Next step: Run 'python app_aws.py' to start the application")
 
 if __name__ == '__main__':
     seed_data()

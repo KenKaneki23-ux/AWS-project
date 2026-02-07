@@ -297,6 +297,23 @@ class Transaction:
         self.fraud_flag = True
         self.status = 'flagged'
     
+    def unflag_fraud(self):
+        """Remove fraud flag from transaction"""
+        conn = sqlite3.connect(Config.DATABASE_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            UPDATE transactions
+            SET fraud_flag = 0, status = 'completed'
+            WHERE transaction_id = ?
+        ''', (self.transaction_id,))
+        
+        conn.commit()
+        conn.close()
+        
+        self.fraud_flag = False
+        self.status = 'completed'
+    
     def to_dict(self):
         """Convert transaction to dictionary"""
         return {
