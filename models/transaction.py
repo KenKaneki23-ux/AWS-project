@@ -212,45 +212,52 @@ class Transaction:
         ) for txn_data in transactions_data]
     
     @staticmethod
-    def get_all(limit=100, offset=0):
+    def get_all(limit=1000, offset=0):
         """Get all transactions with pagination"""
-        conn = sqlite3.connect(Config.DATABASE_PATH)
-        cursor = conn.cursor()
+        db = get_database_adapter()
+        transactions_data = db.get_all_transactions(limit)
         
-        cursor.execute('''
-            SELECT transaction_id, account_id, transaction_type, amount, target_account_id,
-                   timestamp, status, fraud_flag, description
-            FROM transactions
-            ORDER BY timestamp DESC
-            LIMIT ? OFFSET ?
-        ''', (limit, offset))
+        # Note: DynamoDB doesn't support offset-based pagination in the same way
+        # For simplicity, we'll use limit only. Proper implementation would use LastEvaluatedKey
+        transactions = [Transaction(
+            txn_data['transaction_id'],
+            txn_data['account_id'],
+            txn_data['transaction_type'],
+            txn_data['amount'],
+            txn_data.get('target_account_id'),
+            txn_data.get('timestamp'),
+            txn_data.get('status', 'completed'),
+            txn_data.get('fraud_flag', False),
+            txn_data.get('description')
+        ) for txn_data in transactions_data]
         
-        rows = cursor.fetchall()
-        conn.close()
-        
-        return [Transaction(row[0], row[1], row[2], row[3], row[4], row[5], row[6], 
-                          bool(row[7]), row[8]) for row in rows]
+        # Apply offset if needed (client-side)
+        return transactions[offset:offset+limit] if offset > 0 else transactions[:limit]
     
     @staticmethod
     def get_suspicious(limit=50):
         """Get flagged/suspicious transactions"""
-        conn = sqlite3.connect(Config.DATABASE_PATH)
-        cursor = conn.cursor()
+        db = get_database_adapter()
+        all_transactions = db.get_all_transactions(limit=500)  # Get more to filter
         
-        cursor.execute('''
-            SELECT transaction_id, account_id, transaction_type, amount, target_account_id,
-                   timestamp, status, fraud_flag, description
-            FROM transactions
-            WHERE fraud_flag = 1 OR status = 'flagged'
-            ORDER BY timestamp DESC
-            LIMIT ?
-        ''', (limit,))
+        # Filter for suspicious transactions
+        suspicious = [
+            Transaction(
+                txn_data['transaction_id'],
+                txn_data['account_id'],
+                txn_data['transaction_type'],
+                txn_data['amount'],
+                txn_data.get('target_account_id'),
+                txn_data.get('timestamp'),
+                txn_data.get('status', 'completed'),
+                txn_data.get('fraud_flag', False),
+                txn_data.get('description')
+            )
+            for txn_data in all_transactions
+            if txn_data.get('fraud_flag') or txn_data.get('status') == 'flagged'
+        ]
         
-        rows = cursor.fetchall()
-        conn.close()
-        
-        return [Transaction(row[0], row[1], row[2], row[3], row[4], row[5], row[6], 
-                          bool(row[7]), row[8]) for row in rows]
+        return suspicious[:limit]
     
     def flag_fraud(self):
         """Flag transaction as fraudulent"""

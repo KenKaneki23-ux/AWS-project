@@ -1,7 +1,7 @@
 """
 Cloud-hosted Banking Data Analytics and Reporting System on AWS
 Main Flask Application
-Phase 1: Local Development (SQLite-based)
+Using DynamoDB for data storage
 """
 
 from flask import Flask, render_template, redirect, url_for
@@ -110,7 +110,7 @@ if __name__ == '__main__':
     print("=" * 60)
     print("🏦 Cloud-hosted Banking Data Analytics System")
     print("=" * 60)
-    print("📍 Mode: Local Development (SQLite)")
+    print("📍 Mode: AWS (DynamoDB)")
     print("🌐 Running on: http://localhost:5000")
     print("=" * 60)
     print("\n✨ Application started successfully!")

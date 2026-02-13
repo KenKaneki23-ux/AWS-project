@@ -17,11 +17,11 @@ class Config:
     AWS_REGION = os.getenv('AWS_REGION', 'us-east-1')
     
     # DynamoDB Table Names
-    DYNAMODB_USERS_TABLE = os.getenv('DYNAMODB_USERS_TABLE', 'cloudbank-users')
-    DYNAMODB_ACCOUNTS_TABLE = os.getenv('DYNAMODB_ACCOUNTS_TABLE', 'cloudbank-accounts')
-    DYNAMODB_TRANSACTIONS_TABLE = os.getenv('DYNAMODB_TRANSACTIONS_TABLE', 'cloudbank-transactions')
-    DYNAMODB_NOTIFICATIONS_TABLE = os.getenv('DYNAMODB_NOTIFICATIONS_TABLE', 'cloudbank-notifications')
-    DYNAMODB_AUDIT_LOG_TABLE = os.getenv('DYNAMODB_AUDIT_LOG_TABLE', 'cloudbank-audit-log')
+    DYNAMODB_USERS_TABLE = os.getenv('DYNAMODB_USERS_TABLE', 'users')
+    DYNAMODB_ACCOUNTS_TABLE = os.getenv('DYNAMODB_ACCOUNTS_TABLE', 'accounts')
+    DYNAMODB_TRANSACTIONS_TABLE = os.getenv('DYNAMODB_TRANSACTIONS_TABLE', 'transactions')
+    DYNAMODB_NOTIFICATIONS_TABLE = os.getenv('DYNAMODB_NOTIFICATIONS_TABLE', 'notifications')
+    DYNAMODB_AUDIT_LOG_TABLE = os.getenv('DYNAMODB_AUDIT_LOG_TABLE', 'audit-log')
     
 
 

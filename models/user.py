@@ -137,6 +137,18 @@ class User(UserMixin):
             user_data['password_hash']
         ) for user_data in users_data]
     
+    def check_password(self, password):
+        """
+        Verify password against stored hash
+        
+        Args:
+            password: Plain text password to verify
+        
+        Returns:
+            bool: True if password matches, False otherwise
+        """
+        return check_password_hash(self.password_hash, password)
+    
     def get_role_display(self):
         """Get display name for user role"""
         return Config.ROLES.get(self.role, self.role)

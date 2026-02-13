@@ -12,8 +12,7 @@ def test_database_adapter():
     print("=" * 60)
     print("DATABASE ADAPTER TEST")
     print("=" * 60)
-    print(f"Mode: {'AWS' if Config.USE_AWS else 'Local (SQLite)'}")
-    print(f"Database Path: {Config.DATABASE_PATH if not Config.USE_AWS else 'DynamoDB'}")
+    print("Mode: AWS DynamoDB")
     print("=" * 60)
     
     try:

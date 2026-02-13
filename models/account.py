@@ -98,19 +98,16 @@ class Account:
         Returns:
             List of Account objects
         """
-        conn = sqlite3.connect(Config.DATABASE_PATH)
-        cursor = conn.cursor()
+        db = get_database_adapter()
+        accounts_data = db.get_all_accounts()
         
-        cursor.execute('''
-            SELECT account_id, user_id, balance, status, created_at
-            FROM accounts
-            ORDER BY created_at DESC
-        ''')
-        
-        rows = cursor.fetchall()
-        conn.close()
-        
-        return [Account(row[0], row[1], row[2], row[3], row[4]) for row in rows]
+        return [Account(
+            account_data['account_id'],
+            account_data['user_id'],
+            account_data['balance'],
+            account_data['status'],
+            account_data.get('created_at')
+        ) for account_data in accounts_data]
     
     def update_balance(self, amount):
         """
@@ -130,34 +127,14 @@ class Account:
     
     def freeze(self):
         """Freeze account (fraud prevention)"""
-        conn = sqlite3.connect(Config.DATABASE_PATH)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            UPDATE accounts
-            SET status = 'frozen'
-            WHERE account_id = ?
-        ''', (self.account_id,))
-        
-        conn.commit()
-        conn.close()
-        
+        db = get_database_adapter()
+        db.freeze_account(self.account_id)
         self.status = 'frozen'
     
     def activate(self):
         """Activate frozen account"""
-        conn = sqlite3.connect(Config.DATABASE_PATH)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            UPDATE accounts
-            SET status = 'active'
-            WHERE account_id = ?
-        ''', (self.account_id,))
-        
-        conn.commit()
-        conn.close()
-        
+        db = get_database_adapter()
+        db.activate_account(self.account_id)
         self.status = 'active'
     
     def is_active(self):

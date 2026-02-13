@@ -14,12 +14,21 @@ class DatabaseAdapter:
     
     def __init__(self):
         """Initialize DynamoDB resource"""
-        self.dynamodb = boto3.resource(
-            'dynamodb',
-            region_name=Config.AWS_REGION,
-            aws_access_key_id=Config.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=Config.AWS_SECRET_ACCESS_KEY
-        )
+        # Support both explicit credentials (local) and IAM roles (EC2)
+        if Config.AWS_ACCESS_KEY_ID and Config.AWS_SECRET_ACCESS_KEY:
+            # Use explicit credentials (local development)
+            self.dynamodb = boto3.resource(
+                'dynamodb',
+                region_name=Config.AWS_REGION,
+                aws_access_key_id=Config.AWS_ACCESS_KEY_ID,
+                aws_secret_access_key=Config.AWS_SECRET_ACCESS_KEY
+            )
+        else:
+            # Use IAM role credentials (EC2 instance)
+            self.dynamodb = boto3.resource(
+                'dynamodb',
+                region_name=Config.AWS_REGION
+            )
         
         # Table references
         self.users_table = self.dynamodb.Table(Config.DYNAMODB_USERS_TABLE)
@@ -68,15 +77,23 @@ class DatabaseAdapter:
             item = {k: Decimal(str(v)) if isinstance(v, float) else v 
                    for k, v in user_data.items()}
             
+            print(f"Attempting to create user: {item.get('email')}")
+            
             self.users_table.put_item(
                 Item=item,
                 ConditionExpression='attribute_not_exists(user_id)'
             )
+            
+            print(f"✓ User created successfully: {item.get('email')}")
             return True
+            
         except self.dynamodb.meta.client.exceptions.ConditionalCheckFailedException:
+            print(f"✗ User already exists: {user_data.get('email')}")
             return False
         except Exception as e:
-            print(f"Error creating user: {e}")
+            print(f"✗ Error creating user: {type(e).__name__}: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return False
     
     def get_all_users(self):
