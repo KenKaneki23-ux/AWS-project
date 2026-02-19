@@ -5,26 +5,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
-    """AWS DynamoDB Configuration"""
+    """Application Configuration - Local SQLite"""
     
     # Flask
     SECRET_KEY = os.getenv('FLASK_SECRET_KEY', 'dev-secret-key-change-in-production')
     FLASK_ENV = os.getenv('FLASK_ENV', 'development')
     
-    # AWS Configuration
-    AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-    AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-    AWS_REGION = os.getenv('AWS_REGION', 'us-east-1')
-    
-    # DynamoDB Table Names
-    DYNAMODB_USERS_TABLE = os.getenv('DYNAMODB_USERS_TABLE', 'users')
-    DYNAMODB_ACCOUNTS_TABLE = os.getenv('DYNAMODB_ACCOUNTS_TABLE', 'accounts')
-    DYNAMODB_TRANSACTIONS_TABLE = os.getenv('DYNAMODB_TRANSACTIONS_TABLE', 'transactions')
-    DYNAMODB_NOTIFICATIONS_TABLE = os.getenv('DYNAMODB_NOTIFICATIONS_TABLE', 'notifications')
-    DYNAMODB_AUDIT_LOG_TABLE = os.getenv('DYNAMODB_AUDIT_LOG_TABLE', 'audit-log')
-    
-
-
+    # Database (SQLite)
+    DATABASE_PATH = os.getenv('DATABASE_PATH', 'database.db')
     
     # Session Configuration
     SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS

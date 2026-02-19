@@ -16,7 +16,7 @@ from datetime import datetime, timedelta
 def seed_data():
     """Populate database with test data"""
     
-    print("🌱 Seeding database with test data...")
+    print("🌱 Seeding local SQLite database with test data...")
     
     # Create test users (one for each role)
     print("\n👥 Creating users...")
@@ -165,7 +165,7 @@ def seed_data():
     print(f"  • Compliance Officer: compliance@test.com / test123")
     print(f"  • Regular Users:      user1@test.com to user7@test.com / test123")
     
-    print(f"\n✨ Next step: Run 'python app_aws.py' to start the application")
+    print(f"\n✨ Next step: Run 'python app.py' to start the application")
 
 if __name__ == '__main__':
     seed_data()

@@ -1,261 +1,108 @@
 """
-DynamoDB Table Initialization
-Creates all required tables with proper schemas and indexes
+SQLite Database Initialization
+Creates all required tables with proper schemas
 """
 
-import boto3
+import sqlite3
+import os
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from config import Config
 
-def get_dynamodb_resource():
-    """
-    Get DynamoDB resource with credentials from config
-    Supports both:
-    - Explicit credentials (local development)
-    - IAM roles (EC2 instance with attached role)
-    """
-    # If credentials are provided, use them (local development)
-    if Config.AWS_ACCESS_KEY_ID and Config.AWS_SECRET_ACCESS_KEY:
-        return boto3.resource(
-            'dynamodb',
-            region_name=Config.AWS_REGION,
-            aws_access_key_id=Config.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=Config.AWS_SECRET_ACCESS_KEY
-        )
-    
-    # Otherwise, use IAM role (EC2 instance)
-    return boto3.resource('dynamodb', region_name=Config.AWS_REGION)
 
 def init_db():
-    """Initialize all DynamoDB tables"""
-    dynamodb = get_dynamodb_resource()
-    existing_tables = [table.name for table in dynamodb.tables.all()]
+    """Initialize all SQLite tables"""
+    db_path = Config.DATABASE_PATH
     
     print("=" * 60)
-    print("INITIALIZING DYNAMODB TABLES")
+    print("INITIALIZING SQLITE DATABASE")
     print("=" * 60)
-    print(f"Region: {Config.AWS_REGION}")
-    print(f"Existing tables: {existing_tables}")
+    print(f"Database path: {os.path.abspath(db_path)}")
     print("=" * 60)
+    
+    conn = sqlite3.connect(db_path)
     
     # Create Users Table
-    if Config.DYNAMODB_USERS_TABLE not in existing_tables:
-        print(f"\n📦 Creating table: {Config.DYNAMODB_USERS_TABLE}")
-        users_table = dynamodb.create_table(
-            TableName=Config.DYNAMODB_USERS_TABLE,
-            KeySchema=[
-                {
-                    'AttributeName': 'user_id',
-                    'KeyType': 'HASH'  # Partition key
-                }
-            ],
-            AttributeDefinitions=[
-                {
-                    'AttributeName': 'user_id',
-                    'AttributeType': 'S'
-                },
-                {
-                    'AttributeName': 'email',
-                    'AttributeType': 'S'
-                }
-            ],
-            GlobalSecondaryIndexes=[
-                {
-                    'IndexName': 'email-index',
-                    'KeySchema': [
-                        {
-                            'AttributeName': 'email',
-                            'KeyType': 'HASH'
-                        }
-                    ],
-                    'Projection': {
-                        'ProjectionType': 'ALL'
-                    },
-                    'ProvisionedThroughput': {
-                        'ReadCapacityUnits': 5,
-                        'WriteCapacityUnits': 5
-                    }
-                }
-            ],
-            ProvisionedThroughput={
-                'ReadCapacityUnits': 5,
-                'WriteCapacityUnits': 5
-            }
+    print("\n📦 Creating table: users")
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            user_id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            role TEXT NOT NULL
         )
-        
-        # Wait for table to be created
-        print(f"⏳ Waiting for {Config.DYNAMODB_USERS_TABLE} to be created...")
-        users_table.meta.client.get_waiter('table_exists').wait(TableName=Config.DYNAMODB_USERS_TABLE)
-        print(f"✅ Table {Config.DYNAMODB_USERS_TABLE} created successfully!")
-    else:
-        print(f"✓ Table {Config.DYNAMODB_USERS_TABLE} already exists")
+    """)
+    print("✅ Table users created successfully!")
     
     # Create Accounts Table
-    if Config.DYNAMODB_ACCOUNTS_TABLE not in existing_tables:
-        print(f"\n📦 Creating table: {Config.DYNAMODB_ACCOUNTS_TABLE}")
-        accounts_table = dynamodb.create_table(
-            TableName=Config.DYNAMODB_ACCOUNTS_TABLE,
-            KeySchema=[
-                {
-                    'AttributeName': 'account_id',
-                    'KeyType': 'HASH'  # Partition key
-                }
-            ],
-            AttributeDefinitions=[
-                {
-                    'AttributeName': 'account_id',
-                    'AttributeType': 'S'
-                },
-                {
-                    'AttributeName': 'user_id',
-                    'AttributeType': 'S'
-                }
-            ],
-            GlobalSecondaryIndexes=[
-                {
-                    'IndexName': 'user-accounts-index',
-                    'KeySchema': [
-                        {
-                            'AttributeName': 'user_id',
-                            'KeyType': 'HASH'
-                        }
-                    ],
-                    'Projection': {
-                        'ProjectionType': 'ALL'
-                    },
-                    'ProvisionedThroughput': {
-                        'ReadCapacityUnits': 5,
-                        'WriteCapacityUnits': 5
-                    }
-                }
-            ],
-            ProvisionedThroughput={
-                'ReadCapacityUnits': 5,
-                'WriteCapacityUnits': 5
-            }
+    print("\n📦 Creating table: accounts")
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS accounts (
+            account_id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL,
+            balance REAL DEFAULT 0.0,
+            status TEXT DEFAULT 'active',
+            created_at TEXT,
+            FOREIGN KEY (user_id) REFERENCES users(user_id)
         )
-        
-        # Wait for table to be created
-        print(f"⏳ Waiting for {Config.DYNAMODB_ACCOUNTS_TABLE} to be created...")
-        accounts_table.meta.client.get_waiter('table_exists').wait(TableName=Config.DYNAMODB_ACCOUNTS_TABLE)
-        print(f"✅ Table {Config.DYNAMODB_ACCOUNTS_TABLE} created successfully!")
-    else:
-        print(f"✓ Table {Config.DYNAMODB_ACCOUNTS_TABLE} already exists")
+    """)
+    print("✅ Table accounts created successfully!")
     
     # Create Transactions Table
-    if Config.DYNAMODB_TRANSACTIONS_TABLE not in existing_tables:
-        print(f"\n📦 Creating table: {Config.DYNAMODB_TRANSACTIONS_TABLE}")
-        transactions_table = dynamodb.create_table(
-            TableName=Config.DYNAMODB_TRANSACTIONS_TABLE,
-            KeySchema=[
-                {
-                    'AttributeName': 'transaction_id',
-                    'KeyType': 'HASH'  # Partition key
-                }
-            ],
-            AttributeDefinitions=[
-                {
-                    'AttributeName': 'transaction_id',
-                    'AttributeType': 'S'
-                },
-                {
-                    'AttributeName': 'account_id',
-                    'AttributeType': 'S'
-                },
-                {
-                    'AttributeName': 'timestamp',
-                    'AttributeType': 'N'
-                }
-            ],
-            GlobalSecondaryIndexes=[
-                {
-                    'IndexName': 'account-transactions-index',
-                    'KeySchema': [
-                        {
-                            'AttributeName': 'account_id',
-                            'KeyType': 'HASH'
-                        },
-                        {
-                            'AttributeName': 'timestamp',
-                            'KeyType': 'RANGE'  # Sort key for chronological ordering
-                        }
-                    ],
-                    'Projection': {
-                        'ProjectionType': 'ALL'
-                    },
-                    'ProvisionedThroughput': {
-                        'ReadCapacityUnits': 5,
-                        'WriteCapacityUnits': 5
-                    }
-                }
-            ],
-            ProvisionedThroughput={
-                'ReadCapacityUnits': 5,
-                'WriteCapacityUnits': 5
-            }
+    print("\n📦 Creating table: transactions")
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS transactions (
+            transaction_id TEXT PRIMARY KEY,
+            account_id TEXT NOT NULL,
+            transaction_type TEXT NOT NULL,
+            amount REAL NOT NULL,
+            target_account_id TEXT,
+            timestamp INTEGER,
+            status TEXT DEFAULT 'completed',
+            fraud_flag INTEGER DEFAULT 0,
+            description TEXT,
+            FOREIGN KEY (account_id) REFERENCES accounts(account_id)
         )
-        
-        # Wait for table to be created
-        print(f"⏳ Waiting for {Config.DYNAMODB_TRANSACTIONS_TABLE} to be created...")
-        transactions_table.meta.client.get_waiter('table_exists').wait(TableName=Config.DYNAMODB_TRANSACTIONS_TABLE)
-        print(f"✅ Table {Config.DYNAMODB_TRANSACTIONS_TABLE} created successfully!")
-    else:
-        print(f"✓ Table {Config.DYNAMODB_TRANSACTIONS_TABLE} already exists")
+    """)
+    print("✅ Table transactions created successfully!")
     
-    # Create Notifications Table (optional)
-    if Config.DYNAMODB_NOTIFICATIONS_TABLE not in existing_tables:
-        print(f"\n📦 Creating table: {Config.DYNAMODB_NOTIFICATIONS_TABLE}")
-        notifications_table = dynamodb.create_table(
-            TableName=Config.DYNAMODB_NOTIFICATIONS_TABLE,
-            KeySchema=[
-                {
-                    'AttributeName': 'notification_id',
-                    'KeyType': 'HASH'  # Partition key
-                }
-            ],
-            AttributeDefinitions=[
-                {
-                    'AttributeName': 'notification_id',
-                    'AttributeType': 'S'
-                },
-                {
-                    'AttributeName': 'user_id',
-                    'AttributeType': 'S'
-                }
-            ],
-            GlobalSecondaryIndexes=[
-                {
-                    'IndexName': 'user-notifications-index',
-                    'KeySchema': [
-                        {
-                            'AttributeName': 'user_id',
-                            'KeyType': 'HASH'
-                        }
-                    ],
-                    'Projection': {
-                        'ProjectionType': 'ALL'
-                    },
-                    'ProvisionedThroughput': {
-                        'ReadCapacityUnits': 5,
-                        'WriteCapacityUnits': 5
-                    }
-                }
-            ],
-            ProvisionedThroughput={
-                'ReadCapacityUnits': 5,
-                'WriteCapacityUnits': 5
-            }
+    # Create Notifications Table
+    print("\n📦 Creating table: notifications")
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS notifications (
+            notification_id TEXT PRIMARY KEY,
+            user_id TEXT,
+            title TEXT,
+            message TEXT,
+            category TEXT DEFAULT 'system_info',
+            priority TEXT DEFAULT 'normal',
+            is_read INTEGER DEFAULT 0,
+            timestamp INTEGER,
+            FOREIGN KEY (user_id) REFERENCES users(user_id)
         )
-        
-        # Wait for table to be created
-        print(f"⏳ Waiting for {Config.DYNAMODB_NOTIFICATIONS_TABLE} to be created...")
-        notifications_table.meta.client.get_waiter('table_exists').wait(TableName=Config.DYNAMODB_NOTIFICATIONS_TABLE)
-        print(f"✅ Table {Config.DYNAMODB_NOTIFICATIONS_TABLE} created successfully!")
-    else:
-        print(f"✓ Table {Config.DYNAMODB_NOTIFICATIONS_TABLE} already exists")
+    """)
+    print("✅ Table notifications created successfully!")
+    
+    # Create indexes for common queries
+    print("\n📇 Creating indexes...")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_accounts_user ON accounts(user_id)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_transactions_account ON transactions(account_id)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_transactions_timestamp ON transactions(timestamp)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id)")
+    print("✅ Indexes created successfully!")
+    
+    conn.commit()
+    conn.close()
     
     print("\n" + "=" * 60)
     print("✅ ALL TABLES INITIALIZED SUCCESSFULLY!")
     print("=" * 60)
+    print(f"\n📁 Database file: {os.path.abspath(db_path)}")
+    print(f"✨ Next step: Run 'python scripts/seed_data.py' to add test data")
+
 
 if __name__ == '__main__':
     """Run table initialization"""
